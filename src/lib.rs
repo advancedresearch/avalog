@@ -18,7 +18,7 @@
 //! the abstractions across multiple dimensions at the same time, without having to write axioms
 //! for each dimension.
 //!
-//! If normal progragramming is 2D, then [normal paths](https://github.com/advancedresearch/path_semantics/blob/master/papers-wip/normal-paths.pdf)
+//! If normal programming is 2D, then [normal paths](https://github.com/advancedresearch/path_semantics/blob/master/papers-wip/normal-paths.pdf)
 //! in Path Semantics is 3D.
 //! Avatar Extensions seeks to go beyond 3D programming to arbitrary higher dimensions.
 //! Avatar Logic is a deep result from discussing interpretations of [Avatar Graphs](https://github.com/advancedresearch/path_semantics/blob/master/papers-wip/avatar-graphs.pdf),
