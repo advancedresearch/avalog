@@ -1,0 +1,2 @@
+mom(bob) = alice
+dad(bob) = carl

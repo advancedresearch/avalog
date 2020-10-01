@@ -1,0 +1,1 @@
+grandma(carl) => grandparent'(alice)

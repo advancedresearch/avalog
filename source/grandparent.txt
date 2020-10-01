@@ -1,0 +1,7 @@
+uniq parent
+parent'(alice) : mom
+grandparent'(alice) : grandma
+parent'(bob) : dad
+(bob, parent'(alice))
+(carl, parent'(bob))
+(X, grandparent'(Z)) :- (X, parent'(Y)), (Y, parent'(Z)).

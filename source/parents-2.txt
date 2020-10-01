@@ -1,0 +1,2 @@
+mom(bob) = parent'(alice)
+dad(bob) = parent'(carl)

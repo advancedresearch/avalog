@@ -1,0 +1,1 @@
+amb_rel(bob, parent'(alice), parent'(diana))

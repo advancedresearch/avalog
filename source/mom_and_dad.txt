@@ -1,0 +1,4 @@
+role_of(alice) = mom
+role_of(carl) = dad
+(bob, alice)
+(bob, carl)
