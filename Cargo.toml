@@ -1,0 +1,18 @@
+[package]
+name = "avalog"
+version = "0.1.0"
+authors = ["Sven Nilsen <bvssvni@gmail.com>"]
+edition = "2018"
+keywords = ["avatar", "logic", "prolog", "solver", "advancedresearch"]
+description = "An experimental implementation of Avatar Logic with a Prolog-like syntax"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/advancedresearch/avalog.git"
+homepage = "https://github.com/advancedresearch/avalog"
+exclude = ["source/*"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+monotonic_solver = "0.2.1"
+piston_meta = "1.0.0"

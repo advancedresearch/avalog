@@ -1,0 +1,1 @@
+mom(bob) => parent'(alice)

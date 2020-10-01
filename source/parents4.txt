@@ -1,0 +1,4 @@
+uniq parent
+role_of(parent'(alice)) = mom
+role_of(parent'(alice)) = mother
+(bob, parent'(alice))
