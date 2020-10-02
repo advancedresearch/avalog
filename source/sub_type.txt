@@ -1,0 +1,8 @@
+uniq f
+
+f'(a) : sub_type
+
+(x, f'(a))
+(y, f'(b))
+
+sub_type(X) = sub_type(Y) :- (X, f'(A)), (Y, f'(Z)).
