@@ -1,0 +1,15 @@
+eval value
+
+(F(F(X, Y), Z), W) :- (F(X, F(Y, Z)), W), assoc'(F) : op.
+(F(X, F(Y, Z)), W) :- (F(F(X, Y), Z), W), assoc'(F) : op.
+
+assoc'(add) : op
+
+1 : value
+2 : value
+3 : value
+
+(add(1, add(add(1, 1), 3)), 6)
+
+(add(1, 1), 2)
+(add(1, 2), 3)

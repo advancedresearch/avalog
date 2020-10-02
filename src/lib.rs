@@ -321,6 +321,11 @@ impl Expr {
                     )
                 }
             }
+            Rule(res, arg) => {
+                let new_res = res.eval_lift(eval, true);
+                let new_arg: Vec<Expr> = arg.iter().map(|a| a.eval_lift(eval, true)).collect();
+                Rule(Box::new(new_res), new_arg)
+            }
             Sym(_) => self.clone(),
             UniqAva(_) => self.clone(),
             Ambiguity(_) => self.clone(),
@@ -332,7 +337,6 @@ impl Expr {
             Has(_, _) => self.clone(),
             AmbiguousRole(_, _, _) => self.clone(),
             AmbiguousRel(_, _, _) => self.clone(),
-            Rule(_, _) => self.clone(),
             // _ => unimplemented!("{:?}", self)
         }
     }
