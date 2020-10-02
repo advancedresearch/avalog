@@ -20,7 +20,10 @@ fn parse_rule(
         } else if let Ok((range, v)) = parse_rel("res", convert, ignored) {
             convert.update(range);
             res = Some(v);
-        } else if let Ok((range, v)) = parse_rel("arg", convert, ignored) {
+        } else if let Ok((range, v)) = parse_rel("rel", convert, ignored) {
+            convert.update(range);
+            args.push(v);
+        } else if let Ok((range, v)) = parse_role_of("role_of", convert, ignored) {
             convert.update(range);
             args.push(v);
         } else {

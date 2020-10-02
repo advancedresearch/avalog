@@ -3,5 +3,10 @@ uniq capital
 oslo : capital
 stockholm : capital
 
+norway : country
+sweden : country
+
 (norway, oslo)
 (sweden, stockholm)
+
+(X, Y) :- (Y, X), Y : country, X : capital.

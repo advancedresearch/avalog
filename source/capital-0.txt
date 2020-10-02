@@ -1,1 +1,5 @@
 capital(norway) = oslo
+capital(sweden) = stockholm
+
+country(oslo) = norway
+country(stockholm) = sweden
