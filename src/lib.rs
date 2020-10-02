@@ -352,15 +352,8 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
         !cache.contains(new_expr) &&
         !filter_cache.contains(new_expr)
     };
+    
     for e in facts {
-        if let Rule(_, _) = e {
-            for e2 in facts {
-                if let Some(new_expr) = match_rule(e, e2) {
-                    if can_add(&new_expr) {return Some(new_expr)};
-                }
-            }
-        }
-
         if let RoleOf(a, b) = e {
             for e2 in facts {
                 if let RoleOf(a2, b2) = e2 {
@@ -512,6 +505,16 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    for e in facts {
+        if let Rule(_, _) = e {
+            for e2 in facts {
+                if let Some(new_expr) = match_rule(e, e2) {
+                    if can_add(&new_expr) {return Some(new_expr)};
                 }
             }
         }
