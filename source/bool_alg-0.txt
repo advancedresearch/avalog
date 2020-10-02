@@ -1,1 +1,3 @@
 no amb
+
+(not(value(not(true))), true)

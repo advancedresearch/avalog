@@ -429,6 +429,38 @@ fn match_rule(r: &Expr, rel: &Expr) -> Option<Expr> {
     }
 }
 
+fn apply(e: &Expr, facts: &[Expr]) -> Option<Expr> {
+    match e {
+        App(a, b) => {
+            for e2 in facts {
+                if let Eq(b2, b3) = e2 {
+                    if &**b2 == e {
+                        return Some((**b3).clone());
+                    }
+                }
+            }
+
+            match (apply(a, facts), apply(b, facts)) {
+                (Some(a), Some(b)) => return Some(app(a, b)),
+                (None, Some(b)) => return Some(app((**a).clone(), b)),
+                (Some(a), None) => return Some(app(a, (**b).clone())),
+                (None, None) => {}
+            }
+        }
+        Rel(a, b) => {
+            match (apply(a, facts), apply(b, facts)) {
+                (Some(a), Some(b)) => return Some(rel(a, b)),
+                (None, Some(b)) => return Some(rel((**a).clone(), b)),
+                (Some(a), None) => return Some(rel(a, (**b).clone())),
+                (None, None) => {}
+            }
+        }
+        Inner(a) => return Some(inner(apply(a, facts)?)),
+        _ => {}
+    }
+    None
+}
+
 /// Specifies inference rules for monotonic solver.
 pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]) -> Option<Expr> {
     let can_add = |new_expr: &Expr| {
@@ -450,28 +482,6 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
         }
 
         if let Rel(a, b) = e {
-            // Apply right, e.g. `(a, p(b))`.
-            if let App(_, _) = &**b {
-                for e2 in facts {
-                    if let Eq(b2, b3) = e2 {
-                        if b2 == b {
-                            let new_expr = rel((**a).clone(), (**b3).clone());
-                            if can_add(&new_expr) {return Some(new_expr)};
-                        }
-                    }
-                }
-            }
-            // Apply left, e.g. `(p(a), b)`.
-            if let App(_, _) = &**a {
-                for e2 in facts {
-                    if let Eq(a2, a3) = e2 {
-                        if a2 == a {
-                            let new_expr = rel((**a3).clone(), (**b).clone());
-                            if can_add(&new_expr) {return Some(new_expr)};
-                        }
-                    }
-                }
-            }
             // Inner right, e.g. `(a, .b)`.
             if let Inner(b2) = &**b {
                 // `(a, .p'(b)) => (a, b)`
@@ -479,36 +489,12 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                     let new_expr = rel((**a).clone(), (**b3).clone());
                     if can_add(&new_expr) {return Some(new_expr)};
                 }
-
-                // Apply inner right `(a, .p(b))`.
-                if let App(_, _) = &**b2 {
-                    for e3 in facts {
-                        if let Eq(b3, b4) = e3 {
-                            if b3 == b2 {
-                                let new_expr = rel((**a).clone(), inner((**b4).clone()));
-                                if can_add(&new_expr) {return Some(new_expr)};
-                            }
-                        }
-                    }
-                }
             }
             // Inner left, e.g. `(.a, b)`.
             if let Inner(a2) = &**a {
                 if let Ava(_, a3) = &**a2 {
                     let new_expr = rel((**a3).clone(), (**b).clone());
                     if can_add(&new_expr) {return Some(new_expr)};
-                }
-
-                // Apply inner left `(.p(a), b)`.
-                if let App(_, _) = &**a2 {
-                    for e3 in facts {
-                        if let Eq(a3, a4) = e3 {
-                            if a3 == a2 {
-                                let new_expr = rel(inner((**a4).clone()), (**b).clone());
-                                if can_add(&new_expr) {return Some(new_expr)};
-                            }
-                        }
-                    }
                 }
             }
 
@@ -590,6 +576,12 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                     }
                 }
             }
+        }
+    }
+
+    for e in facts {
+        if let Some(new_expr) = apply(e, facts) {
+            if can_add(&new_expr) {return Some(new_expr)};
         }
     }
 

@@ -42,14 +42,8 @@ true : value
 (or(true, false), true)
 (or(true, true), true)
 
-(F(Z), Y) :- (F(G(X)), Y), value(G(X)) = Z.
-(F(A, B), C) :- (F(G(X), B), C), value(G(X)) = A.
-(F(A, B), C) :- (F(A, G(X)), C), value(G(X)) = B.
+(not(value(not(value(not(false))))), true)
 
-(not(not(false)), false)
-(not(not(true)), true)
-(not(not(not(false))), true)
-
-(and(true, not(true)), false)
-(and(not(false), not(false)), true)
-(and(or(false, true), true), true)
+(and(true, value(not(true))), false)
+(and(value(not(false)), value(not(false))), true)
+(and(value(or(false, true)), true), true)
