@@ -175,7 +175,33 @@ impl fmt::Display for Expr {
             RoleOf(a, b) => write!(w, "{} : {}", a, b)?,
             Eq(a, b) => write!(w, "{} = {}", a, b)?,
             Has(a, b) => write!(w, "{} => {}", a, b)?,
-            App(a, b) => write!(w, "{}({})", a, b)?,
+            App(a, b) => {
+                let mut expr = a;
+                let mut args = vec![];
+                let mut found_f = false;
+                while let App(a1, a2) = &**expr {
+                    if let App(_, _) = &**a1 {} else {
+                        found_f = true;
+                        write!(w, "{}(", a1)?;
+                    }
+                    args.push(a2);
+                    expr = a1;
+                }
+                args.push(b);
+
+                if !found_f {
+                    write!(w, "{}(", a)?;
+                }
+                let mut first = true;
+                for arg in &args {
+                    if !first {
+                        write!(w, ", ")?;
+                    }
+                    first = false;
+                    write!(w, "{}", arg)?;
+                }
+                write!(w, ")")?;
+            }
             AmbiguousRole(a, b, c) => write!(w, "amb_role({}, {}, {})", a, b, c)?,
             AmbiguousRel(a, b, c) => write!(w, "amb_rel({}, {}, {})", a, b, c)?,
             Rule(a, b) => {

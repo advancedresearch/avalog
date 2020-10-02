@@ -72,7 +72,7 @@ fn parse_app(
     convert.update(start_range);
 
     let mut f: Option<Arc<String>> = None;
-    let mut arg: Option<Expr> = None;
+    let mut arg: Vec<Expr> = vec![];
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -82,7 +82,7 @@ fn parse_app(
             f = Some(v);
         } else if let Ok((range, v)) = parse_expr("arg", convert, ignored) {
             convert.update(range);
-            arg = Some(v);
+            arg.push(v);
         } else {
             let range = convert.ignore();
             convert.update(range);
@@ -91,11 +91,12 @@ fn parse_app(
     }
 
     let f = f.ok_or(())?;
-    let arg = arg.ok_or(())?;
-    Ok((convert.subtract(start), Expr::App(
-        Box::new(Expr::Sym(f)),
-        Box::new(arg)
-    )))
+    let mut expr = Expr::Sym(f);
+    for a in &arg {
+        expr = app(expr, a.clone());
+    }
+
+    Ok((convert.subtract(start), expr))
 }
 
 fn parse_ava(
