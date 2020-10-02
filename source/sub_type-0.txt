@@ -1,0 +1,5 @@
+no amb
+
+sub_type(x) = sub_type(y)
+
+sub_type(y) = f'(a)

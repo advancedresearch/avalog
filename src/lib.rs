@@ -484,6 +484,10 @@ fn apply(e: &Expr, facts: &[Expr]) -> Option<Expr> {
                 (None, None) => {}
             }
         }
+        Eq(a, b) => {
+            let new_b = apply(b, facts)?;
+            return Some(eq((**a).clone(), new_b))
+        }
         Inner(a) => return Some(inner(apply(a, facts)?)),
         _ => {}
     }
