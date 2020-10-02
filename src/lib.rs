@@ -436,14 +436,10 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                 for e2 in facts {
                     if let RoleOf(b2, r) = e2 {
                         if b2 == b {
-                            for e3 in facts {
-                                if let UniqAva(a3) = e3 {
-                                    if a3 == av {
-                                        uniq = true;
-                                        let new_expr = eq(app((**r).clone(), (**a).clone()), (**b).clone());
-                                        if can_add(&new_expr) {return Some(new_expr)};
-                                    }
-                                }
+                            if cache.contains(&uniq_ava((**av).clone())) {
+                                uniq = true;
+                                let new_expr = eq(app((**r).clone(), (**a).clone()), (**b).clone());
+                                if can_add(&new_expr) {return Some(new_expr)};
                             }
 
                             let new_expr = has(app((**r).clone(), (**a).clone()), (**b).clone());
