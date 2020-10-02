@@ -42,8 +42,10 @@ true : value
 (or(true, false), true)
 (or(true, true), true)
 
-(not(value(not(value(not(false))))), true)
+eval value
 
-(and(true, value(not(true))), false)
-(and(value(not(false)), value(not(false))), true)
-(and(value(or(false, true)), true), true)
+(not(not(not(false))), true)
+
+(and(true, not(true)), false)
+(and(not(false), not(false)), true)
+(and(or(false, true), true), true)

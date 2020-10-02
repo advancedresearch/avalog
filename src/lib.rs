@@ -308,6 +308,35 @@ pub fn ambiguous_rel<T, U, V>(a: T, b: U, c: V) -> Expr
 }
 
 impl Expr {
+    /// Lifts apply with an eval role.
+    pub fn eval_lift(&self, eval: &Arc<String>, top: bool) -> Expr {
+        match self {
+            Rel(a, b) => rel(a.eval_lift(eval, true), b.eval_lift(eval, true)),
+            App(a, b) => {
+                if top {
+                    app(a.eval_lift(eval, true), b.eval_lift(eval, false))
+                } else {
+                    app(Sym(eval.clone()),
+                        app(a.eval_lift(eval, true), b.eval_lift(eval, false))
+                    )
+                }
+            }
+            Sym(_) => self.clone(),
+            UniqAva(_) => self.clone(),
+            Ambiguity(_) => self.clone(),
+            // TODO: Handle these cases.
+            RoleOf(_, _) => self.clone(),
+            Ava(_, _) => self.clone(),
+            Inner(_) => self.clone(),
+            Eq(_, _) => self.clone(),
+            Has(_, _) => self.clone(),
+            AmbiguousRole(_, _, _) => self.clone(),
+            AmbiguousRel(_, _, _) => self.clone(),
+            Rule(_, _) => self.clone(),
+            // _ => unimplemented!("{:?}", self)
+        }
+    }
+
     /// Returns `true` if expression contains no variables.
     pub fn is_const(&self) -> bool {
         match self {

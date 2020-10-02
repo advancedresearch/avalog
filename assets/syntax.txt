@@ -41,5 +41,10 @@ _seps: "/(),.:='"
   rel:"rel"
   term
 }
-1 data = [.w? .l({[expr:"expr" .w?] comment}) .w?]
-0 document = data:"data"
+1 data = .l({
+  ["eval" .w! .._seps!:"eval"]
+  ["no" .w! "eval":"no_eval"]
+  [expr:"expr" .w?]
+  comment
+})
+0 document = [.w? data:"data" .w?]
