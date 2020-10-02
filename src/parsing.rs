@@ -471,6 +471,9 @@ fn parse_expr(
         } else if let Ok((range, val)) = parse_rule("rule", convert, ignored) {
             convert.update(range);
             expr = Some(val);
+        } else if let Ok((range, val)) = convert.meta_bool("amb") {
+            convert.update(range);
+            expr = Some(Ambiguity(val));
         } else {
             let range = convert.ignore();
             convert.update(range);
