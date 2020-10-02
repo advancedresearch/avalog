@@ -188,6 +188,7 @@ impl fmt::Display for Expr {
                     first = false;
                     write!(w, "{}", arg)?;
                 }
+                write!(w, ".")?;
             }
         }
         Ok(())
