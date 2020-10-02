@@ -352,8 +352,9 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
         !cache.contains(new_expr) &&
         !filter_cache.contains(new_expr)
     };
-    
+
     for e in facts {
+        // Detect ambiguous roles.
         if let RoleOf(a, b) = e {
             for e2 in facts {
                 if let RoleOf(a2, b2) = e2 {
@@ -366,6 +367,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
         }
 
         if let Rel(a, b) = e {
+            // Apply right, e.g. `(a, p(b))`.
             if let App(_, _) = &**b {
                 for e2 in facts {
                     if let Eq(b2, b3) = e2 {
@@ -376,6 +378,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                     }
                 }
             }
+            // Apply left, e.g. `(p(a), b)`.
             if let App(_, _) = &**a {
                 for e2 in facts {
                     if let Eq(a2, a3) = e2 {
@@ -386,12 +389,15 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                     }
                 }
             }
+            // Inner right, e.g. `(a, .b)`.
             if let Inner(b2) = &**b {
+                // `(a, .p'(b)) => (a, b)`
                 if let Ava(_, b3) = &**b2 {
                     let new_expr = rel((**a).clone(), (**b3).clone());
                     if can_add(&new_expr) {return Some(new_expr)};
                 }
 
+                // Apply inner right `(a, .p(b))`.
                 if let App(_, _) = &**b2 {
                     for e3 in facts {
                         if let Eq(b3, b4) = e3 {
@@ -403,12 +409,14 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                     }
                 }
             }
+            // Inner left, e.g. `(.a, b)`.
             if let Inner(a2) = &**a {
                 if let Ava(_, a3) = &**a2 {
                     let new_expr = rel((**a3).clone(), (**b).clone());
                     if can_add(&new_expr) {return Some(new_expr)};
                 }
 
+                // Apply inner left `(.p(a), b)`.
                 if let App(_, _) = &**a2 {
                     for e3 in facts {
                         if let Eq(a3, a4) = e3 {
