@@ -285,6 +285,14 @@ fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>) -> bool {
             bind(a1, a2, vs) &&
             bind(b1, b2, vs)
         }
+        (&Eq(ref a1, ref b1), &Eq(ref a2, ref b2)) => {
+            bind(a1, a2, vs) &&
+            bind(b1, b2, vs)
+        }
+        (&App(ref a1, ref b1), &App(ref a2, ref b2)) => {
+            bind(a1, a2, vs) &&
+            bind(b1, b2, vs)
+        }
         (&Sym(ref a1), &Sym(ref a2)) => {
             if let Some(c) = a1.chars().next() {
                 if c.is_uppercase() {
@@ -327,6 +335,12 @@ fn substitute(r: &Expr, vs: &Vec<(Arc<String>, Expr)>) -> Expr {
         }
         RoleOf(a, b) => {
             role_of(substitute(a, vs), substitute(b, vs))
+        }
+        Eq(a, b) => {
+            eq(substitute(a, vs), substitute(b, vs))
+        }
+        App(a, b) => {
+            app(substitute(a, vs), substitute(b, vs))
         }
         _ => unimplemented!()
     }
