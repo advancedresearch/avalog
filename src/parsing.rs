@@ -495,13 +495,26 @@ fn parse_data(
     convert.update(start_range);
 
     let mut res = vec![];
+    let mut eval: Option<Arc<String>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
             break;
         } else if let Ok((range, val)) = parse_expr("expr", convert, ignored) {
             convert.update(range);
+            let val = if let Some(eval) = eval.as_ref() {
+                let top = true;
+                val.eval_lift(eval, top)
+            } else {
+                val
+            };
             res.push(val);
+        } else if let Ok((range, val)) = convert.meta_string("eval") {
+            convert.update(range);
+            eval = Some(val);
+        } else if let Ok((range, val)) = convert.meta_bool("no_eval") {
+            convert.update(range);
+            if val {eval = None};
         } else {
             let range = convert.ignore();
             convert.update(range);

@@ -1,3 +1,7 @@
 no amb
 
-(not(value(not(true))), true)
+eval value
+
+(not(not(true)), true)
+
+bool : type
