@@ -1,0 +1,16 @@
+parent'(alice) : mom
+parent'(sigmund) : dad
+sibling'(bob) : brother
+sibling'(carl) : brother
+sibling'(siri) : sister
+step_sibling'(bob) : step_brother
+step_sibling'(carl) : step_brother
+step_sibling'(siri) : step_sister
+
+(bob, parent'(alice))
+(carl, parent'(alice))
+(carl, parent'(sigmund))
+(siri, parent'(sigmund))
+
+(X, sibling'(Y)) :- (X, parent'(Z)), (Y, parent'(Z)).
+(X, step_sibling'(Y)) :- (X, sibling'(Z)), (Z, sibling'(Y)).

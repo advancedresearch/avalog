@@ -1,0 +1,7 @@
+no amb
+
+brother(bob) => sibling'(carl)
+brother(carl) => sibling'(bob)
+sister(carl) => sibling'(siri)
+step_sister(bob) => step_sibling'(siri)
+step_brother(siri) => step_sibling'(bob)
