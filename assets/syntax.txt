@@ -7,7 +7,7 @@ _seps: "/(),.:='"
 }
 16 rule = [rule_term:"res" .w? ":-" .w? .s!([.w? "," .w?] rule_term:"arg") .w? "."]
 15 inner = ["." term:"arg"]
-14 app = [.._seps!:"f" .w? "(" .w? term:"arg" .w? ")"]
+14 app = [.._seps!:"f" "(" .w? .s!([.w? "," .w?] term:"arg") .w? ")"]
 13 amb_role = ["amb_role" .w? "(" .w?
   term:"a" .w? "," .w? term:"b1" .w? "," .w? term:"b2" .w? ")"]
 12 comment = ["//" ..."\n"?]
