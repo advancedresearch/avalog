@@ -1,5 +1,9 @@
 _seps: "/(),.:='"
 
+18 amb = {
+  ["no" .w? "amb":!"amb"]
+  ["amb":"amb"]
+}
 17 rule_term = {
   role_of:"role_of"
   eq:"eq"
@@ -31,6 +35,7 @@ _seps: "/(),.:='"
   role_of:"role_of"
   amb_role:"amb_role"
   amb_rel:"amb_rel"
+  amb
   has:"has"
   eq:"eq"
   rel:"rel"

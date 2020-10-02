@@ -1,0 +1,55 @@
+univ : type
+
+// type -> type
+type2 : type
+// type -> type -> type
+type3 : type
+
+bool : type
+// bool -> bool
+bool2 : type
+// bool -> bool -> bool
+bool3 : type
+
+(type, univ)
+(type2, type)
+(bool2, type2)
+(bool3, type3)
+
+false : value
+true : value
+
+(false, bool)
+(true, bool)
+
+(not, bool2)
+(not(false), true)
+(not(true), false)
+
+(id, bool2)
+(id(false), false)
+(id(true), true)
+
+(and, bool3)
+(and(false, false), false)
+(and(false, true), false)
+(and(true, false), false)
+(and(true, true), true)
+
+(or, bool3)
+(or(false, false), false)
+(or(false, true), true)
+(or(true, false), true)
+(or(true, true), true)
+
+(F(Z), Y) :- (F(G(X)), Y), value(G(X)) = Z.
+(F(A, B), C) :- (F(G(X), B), C), value(G(X)) = A.
+(F(A, B), C) :- (F(A, G(X)), C), value(G(X)) = B.
+
+(not(not(false)), false)
+(not(not(true)), true)
+(not(not(not(false))), true)
+
+(and(true, not(true)), false)
+(and(not(false), not(false)), true)
+(and(or(false, true), true), true)

@@ -162,6 +162,11 @@ pub enum Expr {
     AmbiguousRel(Box<Expr>, Box<Expr>, Box<Expr>),
     /// Defines a rule.
     Rule(Box<Expr>, Vec<Expr>),
+    /// Ambiguity summary.
+    ///
+    /// This is `true` when some ambiguity is found,
+    /// and `false` when no ambiguity is found.
+    Ambiguity(bool),
 }
 
 impl fmt::Display for Expr {
@@ -204,6 +209,7 @@ impl fmt::Display for Expr {
             }
             AmbiguousRole(a, b, c) => write!(w, "amb_role({}, {}, {})", a, b, c)?,
             AmbiguousRel(a, b, c) => write!(w, "amb_rel({}, {}, {})", a, b, c)?,
+            Ambiguity(v) => if *v {write!(w, "amb")?} else {write!(w, "no amb")?},
             Rule(a, b) => {
                 write!(w, "{} :- ", a)?;
                 let mut first = true;
@@ -301,6 +307,23 @@ pub fn ambiguous_rel<T, U, V>(a: T, b: U, c: V) -> Expr
     AmbiguousRel(Box::new(a.into()), Box::new(b), Box::new(c))
 }
 
+impl Expr {
+    /// Returns `true` if expression contains no variables.
+    pub fn is_const(&self) -> bool {
+        match self {
+            Sym(ref a) => {
+                if let Some(c) = a.chars().next() {
+                    !c.is_uppercase()
+                } else {
+                    true
+                }
+            }
+            App(ref a, ref b) => a.is_const() && b.is_const(),
+            _ => false
+        }
+    }
+}
+
 fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>) -> bool {
     match (e, a) {
         (&Rel(ref a1, ref b1), &Rel(ref a2, ref b2)) => {
@@ -326,6 +349,18 @@ fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>) -> bool {
                     true
                 } else {
                     a1 == a2
+                }
+            } else {
+                false
+            }
+        }
+        (&Sym(ref a1), _) if a.is_const() => {
+            if let Some(c) = a1.chars().next() {
+                if c.is_uppercase() {
+                    vs.push((a1.clone(), a.clone()));
+                    true
+                } else {
+                    false
                 }
             } else {
                 false
@@ -567,6 +602,17 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
             }
         }
     }
+
+    let mut amb = false;
+    for e in facts {
+        if let AmbiguousRel(_, _, _) = e {
+            amb = true;
+        } else if let AmbiguousRole(_, _, _) = e {
+            amb = true;
+        }
+    }
+    let new_expr = Ambiguity(amb);
+    if can_add(&new_expr) {return Some(new_expr)};
     None
 }
 
