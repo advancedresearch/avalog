@@ -497,14 +497,10 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                     for e1 in facts {
                         if let Rel(a2, b2) = e1 {
                             if a2 == a && b2 != b {
-                                for e2 in facts {
-                                    if let RoleOf(a3, b3) = e2 {
-                                        if a3 == b2 && &**b3 == b_role {
-                                            let new_expr = ambiguous_rel((**a).clone(),
-                                                (**b).clone(), (**b2).clone());
-                                            if can_add(&new_expr) {return Some(new_expr)};
-                                        }
-                                    }
+                                if cache.contains(&role_of((**b2).clone(), b_role.clone())) {
+                                    let new_expr = ambiguous_rel((**a).clone(),
+                                        (**b).clone(), (**b2).clone());
+                                    if can_add(&new_expr) {return Some(new_expr)};
                                 }
                             }
                         }
