@@ -17,13 +17,10 @@ fn parse_rule(
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
             break;
-        } else if let Ok((range, v)) = parse_rel("res", convert, ignored) {
+        } else if let Ok((range, v)) = parse_expr("res", convert, ignored) {
             convert.update(range);
             res = Some(v);
-        } else if let Ok((range, v)) = parse_rel("rel", convert, ignored) {
-            convert.update(range);
-            args.push(v);
-        } else if let Ok((range, v)) = parse_role_of("role_of", convert, ignored) {
+        } else if let Ok((range, v)) = parse_expr("arg", convert, ignored) {
             convert.update(range);
             args.push(v);
         } else {
