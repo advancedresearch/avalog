@@ -11,7 +11,7 @@ _seps: "/(),.:='"
 10 has = [term_no_app:"f" .w? "(" .w? term:"arg" .w? ")" .w? "=>" .w? term:"res"]
 9 ava = [.._seps!:"avatar" "'" .w? "(" .w? term:"core" .w? ")"]
 8 uniq = ["uniq " .w? term:"arg"]
-7 eq = [term:"f" .w? "(" .w? term:"arg" .w? ")" .w? "=" .w? term:"res"]
+7 eq = [term_no_app:"f" .w? "(" .w? term:"arg" .w? ")" .w? "=" .w? term:"res"]
 6 rel = ["(" .w? term:"a" .w? "," .w? term:"b" .w? ")"]
 5 sym = .._seps!:"val"
 4 role_of = {
