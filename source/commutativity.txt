@@ -1,0 +1,11 @@
+eval value
+
+(F(Y, X), W) :- (F(X, Y), W), commut'(F) : op.
+
+commut'(add) : op
+
+1 : value
+2 : value
+3 : value
+
+(add(2, 3), 5)
