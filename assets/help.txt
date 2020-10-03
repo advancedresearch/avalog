@@ -1,0 +1,11 @@
+=== Avalog Help ===
+Made by Sven Nilsen, 2020
+
+Avalog is based on the theory of avatar extensions in path semantics:
+https://github.com/advancedresearch/path_semantics/blob/master/sequences.md#avatar-extensions
+
+Special commands:
+- bye             quits the program
+- prove <expr>    prove a goal
+
+Type in an expression in avatar logic, e.g. `(a, q'(b))`
