@@ -192,20 +192,22 @@ impl fmt::Display for Expr {
                     args.push(a2);
                     expr = a1;
                 }
-                args.push(b);
 
                 if !found_f {
                     write!(w, "{}(", a)?;
                 }
                 let mut first = true;
-                for arg in &args {
+                for arg in args.iter().rev() {
                     if !first {
                         write!(w, ", ")?;
                     }
                     first = false;
                     write!(w, "{}", arg)?;
                 }
-                write!(w, ")")?;
+                if !first {
+                    write!(w, ", ")?;
+                }
+                write!(w, "{})", b)?;
             }
             AmbiguousRole(a, b, c) => write!(w, "amb_role({}, {}, {})", a, b, c)?,
             AmbiguousRel(a, b, c) => write!(w, "amb_rel({}, {}, {})", a, b, c)?,
