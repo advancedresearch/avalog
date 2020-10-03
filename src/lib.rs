@@ -643,6 +643,22 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
             }
         }
 
+        // Convert 'has' into 'eq' using uniqueness.
+        if let Has(a, b) = e {
+            if let Ava(b1, _) = &**b {
+                // `p(a) => q'(b), uniq q   =>   p(a) = q'(b)`
+                let uniq_expr = uniq_ava((**b1).clone());
+                if cache.contains(&uniq_expr) {
+                    let new_expr = eq((**a).clone(), (**b).clone());
+                    if can_add(&new_expr) {return Some(new_expr)};
+                }
+            } else {
+                // `p(a) => b   =>   p(a) = b`
+                let new_expr = eq((**a).clone(), (**b).clone());
+                if can_add(&new_expr) {return Some(new_expr)};
+            }
+        }
+
         if let Rel(a, b) = e {
             if let Ava(av, _) = &**b {
                 // Avatar Binary Relation.
