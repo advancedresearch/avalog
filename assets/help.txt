@@ -8,5 +8,6 @@ Special commands:
 - bye                 quits the program
 - prove <expr>        prove a goal
 - import "<file>"     imports an Avalog file
+- clear               clears all facts
 
 Type in an expression in avatar logic, e.g. `(a, q'(b))`

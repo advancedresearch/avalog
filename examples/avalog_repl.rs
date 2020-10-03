@@ -21,6 +21,7 @@ fn main() {
 
         match input.trim() {
             "bye" => break,
+            "clear" => {facts.clear(); continue}
             "help" => {print_help(); continue}
             x => {
                 if x.starts_with("prove ") {
