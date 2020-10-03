@@ -46,6 +46,7 @@ _seps: "/(),.:='"
   term
 }
 1 data = .l({
+  ["import" .w! .t!:"import"]
   ["eval" .w! .._seps!:"eval"]
   ["no" .w! "eval":"no_eval"]
   [expr:"expr" .w?]
