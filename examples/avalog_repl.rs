@@ -1,7 +1,7 @@
 use avalog::*;
 
 fn main() {
-    println!("=== Avalog 0.1 ===");
+    println!("=== Avalog 0.2 ===");
     println!("Type `help` for more information.");
 
     let mut facts = vec![];

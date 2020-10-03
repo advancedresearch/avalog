@@ -5,6 +5,32 @@
 //! An experimental implementation of Avatar Logic
 //! with a Prolog-like syntax.
 //!
+//! ```text
+//! === Avalog 0.2 ===
+//! Type `help` for more information.
+//! > parent'(alice) : mom
+//! > (bob, parent'(alice))
+//! > prove mom(bob) => parent'(alice)
+//! parent'(alice) : mom
+//! (bob, parent'(alice))
+//! ----------------------------------
+//! mom(bob) => parent'(alice)
+//!
+//! OK
+//! ```
+//!
+//! To run Avalog from your Terminal, type:
+//!
+//! ```text
+//! cargo install --example repl avalog_repl
+//! ```
+//!
+//! Then, to run:
+//!
+//! ```text
+//! avalog_repl
+//! ```
+//!
 //! Based on paper [Avatar Binary Relations](https://github.com/advancedresearch/path_semantics/blob/master/papers-wip/avatar-binary-relations.pdf).
 //!
 //! ### Motivation
