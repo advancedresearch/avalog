@@ -1,6 +1,7 @@
 use crate::*;
 
 use piston_meta::{Convert, Range};
+use std::path::Path;
 
 fn parse_rule(
     node: &str,
@@ -494,7 +495,8 @@ fn parse_expr(
 fn parse_data(
     node: &str,
     mut convert: Convert,
-    ignored: &mut Vec<Range>
+    ignored: &mut Vec<Range>,
+    parent: &Path
 ) -> Result<(Range, Vec<Expr>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
@@ -523,7 +525,7 @@ fn parse_data(
             if val {eval = None};
         } else if let Ok((range, val)) = convert.meta_string("import") {
             convert.update(range);
-            match parse(&**val) {
+            match parse(parent.join(&**val)) {
                 Ok(facts) => res.extend(facts),
                 Err(err) => println!("ERROR:\n{}", err),
             }
@@ -538,7 +540,7 @@ fn parse_data(
 }
 
 /// Parses a string.
-pub fn parse_str(data: &str) -> Result<Vec<Expr>, String> {
+pub fn parse_str(data: &str, parent: &Path) -> Result<Vec<Expr>, String> {
     use piston_meta::{parse_errstr, syntax_errstr};
 
     let syntax_src = include_str!("../assets/syntax.txt");
@@ -551,21 +553,26 @@ pub fn parse_str(data: &str) -> Result<Vec<Expr>, String> {
 
     let convert = Convert::new(&meta_data);
     let mut ignored = vec![];
-    match parse_data("data", convert, &mut ignored) {
+    match parse_data("data", convert, &mut ignored, parent) {
         Err(()) => Err("Could not convert meta data".into()),
         Ok((_, expr)) => Ok(expr),
     }
 }
 
 /// Parses a source file.
-pub fn parse(source: &str) -> Result<Vec<Expr>, String> {
+pub fn parse<P: AsRef<Path>>(source: P) -> Result<Vec<Expr>, String> {
     use std::fs::File;
     use std::io::Read;
 
+    let source = source.as_ref();
     let mut data_file = File::open(source).map_err(|err|
-        format!("Could not open `{}`, {}", source, err))?;
+        format!("Could not open `{:?}`, {}", source, err))?;
     let mut data = String::new();
+    let parent = if let Some(dir) = source.parent() {
+        dir
+    } else {
+        return Err("Could not get parent directory of file".into());
+    };
     data_file.read_to_string(&mut data).unwrap();
-
-    parse_str(&data)
+    parse_str(&data, &parent)
 }

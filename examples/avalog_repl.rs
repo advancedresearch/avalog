@@ -4,6 +4,13 @@ fn main() {
     println!("=== Avalog 0.2 ===");
     println!("Type `help` for more information.");
 
+    let ref parent = match std::env::current_dir() {
+        Ok(x) => x,
+        Err(_) => {
+            eprintln!("Could not get working directory");
+            return;
+        }
+    };
     let mut facts = vec![];
     let mut settings = ProveSettings {
         hide_facts: false,
@@ -56,7 +63,7 @@ fn main() {
             "help hide" => {print_help_hide(); continue}
             x => {
                 if x.starts_with("prove ") {
-                    match parse_str(x[6..].trim()) {
+                    match parse_str(x[6..].trim(), &parent) {
                         Ok(goals) => {
                             prove(&goals, &facts, &settings);
                             continue;
@@ -67,7 +74,7 @@ fn main() {
                         }
                     }
                 } else if x.starts_with("echo ") {
-                    match parse_str(x[5..].trim()) {
+                    match parse_str(x[5..].trim(), parent) {
                         Ok(facts) => {
                             println!("{:#?}", facts);
                             continue;
@@ -81,7 +88,7 @@ fn main() {
             }
         }
 
-        match parse_str(&input) {
+        match parse_str(&input, parent) {
             Ok(new_facts) => {
                 facts.extend(new_facts);
             }
