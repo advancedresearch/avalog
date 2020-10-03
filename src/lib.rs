@@ -593,11 +593,31 @@ fn apply(e: &Expr, facts: &[Expr]) -> Option<Expr> {
                 (None, None) => {}
             }
         }
+        Ava(a, b) => {
+            match (apply(a, facts), apply(b, facts)) {
+                (Some(a), Some(b)) => return Some(ava(a, b)),
+                (None, Some(b)) => return Some(ava((**a).clone(), b)),
+                (Some(a), None) => return Some(ava(a, (**b).clone())),
+                (None, None) => {}
+            }
+        }
         Eq(a, b) => {
             let new_b = apply(b, facts)?;
             return Some(eq((**a).clone(), new_b))
         }
-        Inner(a) => return Some(inner(apply(a, facts)?)),
+        Inner(a) => {
+            let new_a = apply(a, facts);
+            if new_a.is_some() {return new_a.map(|n| inner(n))};
+            if let Ava(_, b) = &**a {
+                if let Some(new_b) = apply(b, facts) {
+                    return Some(new_b);
+                } else {
+                    return Some((**b).clone());
+                }
+            } else {
+                return Some(inner(apply(a, facts)?));
+            }
+        }
         _ => {}
     }
     None
@@ -624,22 +644,6 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
         }
 
         if let Rel(a, b) = e {
-            // Inner right, e.g. `(a, .b)`.
-            if let Inner(b2) = &**b {
-                // `(a, .p'(b)) => (a, b)`
-                if let Ava(_, b3) = &**b2 {
-                    let new_expr = rel((**a).clone(), (**b3).clone());
-                    if can_add(&new_expr) {return Some(new_expr)};
-                }
-            }
-            // Inner left, e.g. `(.a, b)`.
-            if let Inner(a2) = &**a {
-                if let Ava(_, a3) = &**a2 {
-                    let new_expr = rel((**a3).clone(), (**b).clone());
-                    if can_add(&new_expr) {return Some(new_expr)};
-                }
-            }
-
             if let Ava(av, _) = &**b {
                 // Avatar Binary Relation.
                 let mut b_role: Option<Expr> = None;
