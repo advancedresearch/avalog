@@ -1,0 +1,11 @@
+=== Hide and Show Facts and Rules ===
+
+You can hide and show facts and rules in proof assumptions.
+
+Special commands:
+- hide facts
+- hide rules
+- hide all
+- show facts
+- show rules
+- show all
