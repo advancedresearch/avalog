@@ -9,5 +9,6 @@ Special commands:
 - prove <expr>        prove a goal
 - import "<file>"     imports an Avalog file
 - clear               clears all facts
+- echo <expr>         prints out debug format of expression
 
 Type in an expression in avatar logic, e.g. `(a, q'(b))`
