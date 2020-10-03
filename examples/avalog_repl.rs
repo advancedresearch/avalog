@@ -5,6 +5,10 @@ fn main() {
     println!("Type `help` for more information.");
 
     let mut facts = vec![];
+    let mut settings = ProveSettings {
+        hide_facts: false,
+        hide_rules: false,
+    };
     loop {
         use std::io::{self, Write};
 
@@ -22,12 +26,39 @@ fn main() {
         match input.trim() {
             "bye" => break,
             "clear" => {facts.clear(); continue}
+            "hide facts" => {
+                settings.hide_facts = true;
+                continue
+            }
+            "hide rules" => {
+                settings.hide_rules = true;
+                continue
+            }
+            "hide all" => {
+                settings.hide_facts = true;
+                settings.hide_rules = true;
+                continue
+            }
+            "show facts" => {
+                settings.hide_facts = false;
+                continue
+            }
+            "show rules" => {
+                settings.hide_rules = false;
+                continue
+            }
+            "show all" => {
+                settings.hide_facts = false;
+                settings.hide_rules = false;
+                continue
+            }
             "help" => {print_help(); continue}
+            "help hide" => {print_help_hide(); continue}
             x => {
                 if x.starts_with("prove ") {
                     match parse_str(x[6..].trim()) {
                         Ok(goals) => {
-                            prove(&goals, &facts);
+                            prove(&goals, &facts, &settings);
                             continue;
                         }
                         Err(err) => {
@@ -63,7 +94,12 @@ fn main() {
     }
 }
 
-fn prove(goals: &[Expr], facts: &[Expr]) {
+pub struct ProveSettings {
+    pub hide_facts: bool,
+    pub hide_rules: bool,
+}
+
+fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
     let order_constraints = vec![];
 
     let res = solve_and_reduce(
@@ -73,6 +109,8 @@ fn prove(goals: &[Expr], facts: &[Expr]) {
         &order_constraints,
         infer,
     );
+    let mut count_hidden_facts = 0;
+    let mut count_hidden_rules = 0;
     match res {
         Ok(ref res) | Err(ref res) => {
             let mut in_start = true;
@@ -87,11 +125,25 @@ fn prove(goals: &[Expr], facts: &[Expr]) {
                     }
                     if !found {
                         in_start = false;
+                        if count_hidden_facts > 0 {
+                            println!("<---oo-o--< {} hidden facts >--o-oo--->", count_hidden_facts);
+                        }
+                        if count_hidden_rules > 0 {
+                            println!("<---oo-o--< {} hidden rules >--o-oo--->", count_hidden_rules);
+                        }
                         print!("----------------------------------------");
                         println!("----------------------------------------");
                     }
                 }
-                println!("{}", r);
+                let rule = if let Expr::Rule(_, _) = r {true} else {false};
+                let hide = in_start && (!rule && settings.hide_facts ||
+                    rule && settings.hide_rules);
+                if !hide {
+                    println!("{}", r);
+                } else {
+                    if !rule {count_hidden_facts += 1};
+                    if rule {count_hidden_rules += 1};
+                }
             }
         }
     }
@@ -105,3 +157,4 @@ fn prove(goals: &[Expr], facts: &[Expr]) {
 }
 
 fn print_help() {print!("{}", include_str!("../assets/help.txt"))}
+fn print_help_hide() {print!("{}", include_str!("../assets/help-hide.txt"))}
