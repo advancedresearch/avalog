@@ -5,7 +5,8 @@ Avalog is based on the theory of avatar extensions in path semantics:
 https://github.com/advancedresearch/path_semantics/blob/master/sequences.md#avatar-extensions
 
 Special commands:
-- bye             quits the program
-- prove <expr>    prove a goal
+- bye                 quits the program
+- prove <expr>        prove a goal
+- import "<file>"     imports an Avalog file
 
 Type in an expression in avatar logic, e.g. `(a, q'(b))`

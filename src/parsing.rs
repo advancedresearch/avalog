@@ -521,6 +521,12 @@ fn parse_data(
         } else if let Ok((range, val)) = convert.meta_bool("no_eval") {
             convert.update(range);
             if val {eval = None};
+        } else if let Ok((range, val)) = convert.meta_string("import") {
+            convert.update(range);
+            match parse(&**val) {
+                Ok(facts) => res.extend(facts),
+                Err(err) => println!("ERROR:\n{}", err),
+            }
         } else {
             let range = convert.ignore();
             convert.update(range);
