@@ -1,0 +1,4 @@
+(do, copy(A)) :- (do, copy(A, ..)).
+(do, copy(B)) :- (do, copy(A, ..B)).
+
+(do, copy(a, b, c, d))

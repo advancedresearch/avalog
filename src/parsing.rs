@@ -83,6 +83,12 @@ fn parse_app(
         } else if let Ok((range, v)) = parse_expr("arg", convert, ignored) {
             convert.update(range);
             arg.push(v);
+        } else if let Ok((range, v)) = convert.meta_bool("tail") {
+            convert.update(range);
+            if v {arg.push(Tail)};
+        } else if let Ok((range, v)) = convert.meta_string("tail_sym") {
+            convert.update(range);
+            arg.push(TailSym(v));
         } else {
             let range = convert.ignore();
             convert.update(range);

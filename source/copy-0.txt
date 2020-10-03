@@ -1,0 +1,3 @@
+(do, copy(a))
+(do, copy(b))
+(do, copy(c))

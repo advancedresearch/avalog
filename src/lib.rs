@@ -167,6 +167,12 @@ pub enum Expr {
     /// This is `true` when some ambiguity is found,
     /// and `false` when no ambiguity is found.
     Ambiguity(bool),
+    /// Represents the tail of an argument list `..`.
+    Tail,
+    /// Represents the tail of an argument list bound a symbol `..x`.
+    TailSym(Arc<String>),
+    /// Represents a list.
+    List(Vec<Expr>),
 }
 
 impl fmt::Display for Expr {
@@ -223,6 +229,20 @@ impl fmt::Display for Expr {
                     write!(w, "{}", arg)?;
                 }
                 write!(w, ".")?;
+            }
+            Tail => write!(w, "..")?,
+            TailSym(a) => write!(w, "..{}", a)?,
+            List(a) => {
+                write!(w, "[")?;
+                let mut first = true;
+                for item in a {
+                    if !first {
+                        write!(w, ", ")?;
+                    }
+                    first = false;
+                    write!(w, "{}", item)?;
+                }
+                write!(w, "]")?;
             }
         }
         Ok(())
@@ -331,6 +351,8 @@ impl Expr {
             Sym(_) => self.clone(),
             UniqAva(_) => self.clone(),
             Ambiguity(_) => self.clone(),
+            Tail => self.clone(),
+            TailSym(_) => self.clone(),
             // TODO: Handle these cases.
             RoleOf(_, _) => self.clone(),
             Ava(_, _) => self.clone(),
@@ -339,6 +361,7 @@ impl Expr {
             Has(_, _) => self.clone(),
             AmbiguousRole(_, _, _) => self.clone(),
             AmbiguousRel(_, _, _) => self.clone(),
+            List(_) => self.clone(),
             // _ => unimplemented!("{:?}", self)
         }
     }
@@ -357,25 +380,60 @@ impl Expr {
             _ => false
         }
     }
+
+    /// Returns `true` if expression is a tail pattern.
+    pub fn is_tail(&self) -> bool {
+        match self {
+            Tail | TailSym(_) => true,
+            _ => false
+        }
+    }
+
+    /// Returns the number of arguments in apply expression.
+    pub fn arity(&self) -> usize {
+        if let App(a, _) = self {a.arity() + 1} else {0}
+    }
 }
 
-fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>) -> bool {
+fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>, tail: &mut Vec<Expr>) -> bool {
     match (e, a) {
         (&Rel(ref a1, ref b1), &Rel(ref a2, ref b2)) => {
-            bind(a1, a2, vs) &&
-            bind(b1, b2, vs)
+            bind(a1, a2, vs, tail) &&
+            bind(b1, b2, vs, tail)
         }
         (&RoleOf(ref a1, ref b1), &RoleOf(ref a2, ref b2)) => {
-            bind(a1, a2, vs) &&
-            bind(b1, b2, vs)
+            bind(a1, a2, vs, tail) &&
+            bind(b1, b2, vs, tail)
         }
         (&Eq(ref a1, ref b1), &Eq(ref a2, ref b2)) => {
-            bind(a1, a2, vs) &&
-            bind(b1, b2, vs)
+            bind(a1, a2, vs, tail) &&
+            bind(b1, b2, vs, tail)
+        }
+        (&App(ref a1, ref b1), &App(ref a2, ref b2)) if b1.is_tail() &&
+            a2.arity() >= a1.arity() && b2.is_const() => {
+            tail.push((**b2).clone());
+            if a2.arity() > a1.arity() {
+                bind(e, a2, vs, tail)
+            } else {
+                bind(a1, a2, vs, tail) &&
+                if let TailSym(b1_sym) = &**b1 {
+                    if tail.len() > 0 {
+                        tail.reverse();
+                        vs.push((b1_sym.clone(), List(tail.clone())));
+                        tail.clear();
+                        true
+                    } else {
+                        tail.clear();
+                        false
+                    }
+                } else {
+                    true
+                }
+            }
         }
         (&App(ref a1, ref b1), &App(ref a2, ref b2)) => {
-            bind(a1, a2, vs) &&
-            bind(b1, b2, vs)
+            bind(a1, a2, vs, tail) &&
+            bind(b1, b2, vs, tail)
         }
         (&Sym(ref a1), &Sym(ref a2)) => {
             if let Some(c) = a1.chars().next() {
@@ -402,8 +460,8 @@ fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>) -> bool {
             }
         }
         (&Ava(ref a1, ref b1), &Ava(ref a2, ref b2)) => {
-            bind(a1, a2, vs) &&
-            bind(b1, b2, vs)
+            bind(a1, a2, vs, tail) &&
+            bind(b1, b2, vs, tail)
         }
         _ => false
     }
@@ -436,7 +494,25 @@ fn substitute(r: &Expr, vs: &Vec<(Arc<String>, Expr)>) -> Expr {
             eq(substitute(a, vs), substitute(b, vs))
         }
         App(a, b) => {
-            app(substitute(a, vs), substitute(b, vs))
+            let a_expr = substitute(a, vs);
+            if let Sym(a1) = &**b {
+                if let Some(c) = a1.chars().next() {
+                    if c.is_uppercase() {
+                        for v in vs {
+                            if &v.0 == a1 {
+                                if let List(args) = &v.1 {
+                                    let mut expr = a_expr;
+                                    for arg in args {
+                                        expr = app(expr, arg.clone());
+                                    }
+                                    return expr;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            app(a_expr, substitute(b, vs))
         }
         _ => unimplemented!()
     }
@@ -445,7 +521,8 @@ fn substitute(r: &Expr, vs: &Vec<(Arc<String>, Expr)>) -> Expr {
 fn match_rule(r: &Expr, rel: &Expr) -> Option<Expr> {
     if let Rule(res, args) = r {
         let mut vs = vec![];
-        if bind(&args[0], rel, &mut vs) {
+        let mut tail = vec![];
+        if bind(&args[0], rel, &mut vs, &mut tail) {
             if args.len() > 1 {
                 let mut new_args = vec![];
                 for e in &args[1..] {
