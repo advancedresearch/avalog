@@ -15,5 +15,6 @@ Special commands:
 - help roles          more help about roles
 - help avatars        more help about avatars
 - help application    more help about application
+- help rules          more help about rules
 
 Type in an expression in avatar logic, e.g. `(a, q'(b))`

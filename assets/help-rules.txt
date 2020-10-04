@@ -1,0 +1,20 @@
+=== Rules ===
+A rule in Avatar Logic is similar to rules in Prolog.
+
+For example:
+
+  (X, Y) :- (Y, X), X : capital, Y : country.
+
+The left side `(X, Y)` is the Head and the right side is the Body of rule:
+
+  Head :- Body.
+
+The Head is true if the Body is true.
+
+When adding facts, the rules can infer new facts:
+
+  england : country
+  london : capital
+  (england, london)
+  -----------------
+  (london, england)
