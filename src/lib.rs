@@ -22,7 +22,7 @@
 //! To run Avalog from your Terminal, type:
 //!
 //! ```text
-//! cargo install --example repl avalog_repl
+//! cargo install --example avalog_repl avalog
 //! ```
 //!
 //! Then, to run:
