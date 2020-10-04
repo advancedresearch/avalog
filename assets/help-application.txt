@@ -1,0 +1,29 @@
+=== Application ===
+When applying a role `p` to some argument `a`,
+it is written `p(a)`.
+
+Sometimes, application returns a 1-avatar.
+To get the inner value of a 1-avatar, one can use `.` in front:
+
+  .p(a)
+
+Application is treated as unique by default.
+This means that when writing:
+
+  p(b) : f
+  (a, p(b))
+
+This adds the following expressions:
+
+  f(a) = p(b)
+  f(a) => p(b)
+
+To make application non-unique, use the following trick:
+
+  q'(b) : f
+  p(b) = q'(b)
+  (a, q'(.p(b)))
+
+This only adds the following expression:
+
+  f(a) => q'(b)
