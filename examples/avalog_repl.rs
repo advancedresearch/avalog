@@ -65,6 +65,7 @@ fn main() {
             "help roles" => {print_help_roles(); continue}
             "help avatars" => {print_help_avatars(); continue}
             "help application" => {print_help_application(); continue}
+            "help rules" => {print_help_rules(); continue}
             x => {
                 if x.starts_with("prove ") {
                     match parse_str(x[6..].trim(), &parent) {
@@ -174,3 +175,4 @@ fn print_help_pairs() {print!("{}", include_str!("../assets/help-pairs.txt"))}
 fn print_help_roles() {print!("{}", include_str!("../assets/help-roles.txt"))}
 fn print_help_avatars() {print!("{}", include_str!("../assets/help-avatars.txt"))}
 fn print_help_application() {print!("{}", include_str!("../assets/help-application.txt"))}
+fn print_help_rules() {print!("{}", include_str!("../assets/help-rules.txt"))}
