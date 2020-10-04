@@ -1,0 +1,35 @@
+=== Avatars ===
+The benefit of Avatar Logic is that it can infer
+a lot from the data without explicit constraints.
+
+In Avatar Logic, a 1-avatar is a simple extension of a term.
+1-avatars are used when using the term directly is too constrained.
+
+Higher avatars than 1-avatars are an implicit result from
+Avatar Logic itself, so you only need to specify 1-avatars.
+
+For example:
+
+  parent'(alice) : mom
+  (bob, parent'(alice))
+
+Avalog adds the following expression:
+
+  mom(bob) => parent'(alice)
+
+Here, `parent` is the 1-avatar extending `alice`.
+
+One can think about this as `mom(bob)` being a set,
+which contains only `parent'(_)` 1-avatars.
+Among these parents, is `parent'(alice)`.
+Hence, this can be read as "Bob has a mom named Alice".
+
+To specify that Bob only has one mom, one can write:
+
+  uniq parent
+
+This adds the following expression:
+
+  mom(bob) = parent'(alice)
+
+Now, one can read this as "Bob's mom is Alice".
