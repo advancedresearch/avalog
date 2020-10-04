@@ -747,11 +747,63 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
         }
     }
 
-    for e in facts {
+    // Find the last used rule.
+    // This is used for diagonalization, which means that
+    // rules are expanded using breath-first search.
+    let mut last_rule: Option<(usize, usize)> = None;
+    for (i, e) in facts.iter().enumerate() {
         if let Rule(_, _) = e {
-            for e2 in facts {
+            let mut last_fact: Option<usize> = None;
+            for (j, e2) in facts.iter().enumerate() {
                 if let Some(new_expr) = match_rule(e, e2) {
-                    if can_add(&new_expr) {return Some(new_expr)};
+                    if !can_add(&new_expr) {
+                        if last_fact.is_none() || last_fact.unwrap() < j {
+                            last_fact = Some(j);
+                        }
+                    }
+                }
+            }
+            if let Some(j) = last_fact {
+                if last_rule.is_none() || last_rule.unwrap().1 < j {
+                    last_rule = Some((i, j));
+                }
+            }
+        }
+    }
+
+    match last_rule {
+        None => {
+            // Normal rule order.
+            for e in facts {
+                if let Rule(_, _) = e {
+                    for e2 in facts {
+                        if let Some(new_expr) = match_rule(e, e2) {
+                            if can_add(&new_expr) {return Some(new_expr)};
+                        }
+                    }
+                }
+            }
+        }
+        Some((i, _)) => {
+            // Diagonalize rules.
+            // Start with the next rule.
+            for e in &facts[i + 1..] {
+                if let Rule(_, _) = e {
+                    for e2 in facts {
+                        if let Some(new_expr) = match_rule(e, e2) {
+                            if can_add(&new_expr) {return Some(new_expr)};
+                        }
+                    }
+                }
+            }
+            // Try previous used rules.
+            for e in &facts[..i + 1] {
+                if let Rule(_, _) = e {
+                    for e2 in facts {
+                        if let Some(new_expr) = match_rule(e, e2) {
+                            if can_add(&new_expr) {return Some(new_expr)};
+                        }
+                    }
                 }
             }
         }

@@ -112,6 +112,7 @@ fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
     let res = solve_and_reduce(
         &facts,
         &goals,
+        None,
         &[],
         &order_constraints,
         infer,
