@@ -1,0 +1,16 @@
+=== Pairs ===
+In Avatar Logic, data consists mainly of ordered pairs.
+
+For example:
+
+  (a, b)          pair with two concrete elements `a` and `b`
+  (a, q'(b))      pair with a 1-avatar `q'(b)`
+  (a, p(b))       pair with application `p(b)`
+
+This is different from normal logic, where predicates are used instead.
+
+The benefit of using pairs is that can think about the underlying
+data as a matrix with column and rows for each term.
+
+The left argument `A` of the pair `(A, B)` can be thought of as
+the input, while the right argument `B` can be thought of as the output.
