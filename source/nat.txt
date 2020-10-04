@@ -1,0 +1,7 @@
+z : nat
+s(X) : nat :- X : nat.
+
+(add(z, z), z)
+(add(X, z), X) :- X : nat.
+(add(z, X), X) :- X : nat.
+(add(s(X), s(Y)), nat(add(s(s(X)), Y))) :- X : nat, Y : nat.
