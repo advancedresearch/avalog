@@ -751,21 +751,14 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
     // This is used for diagonalization, which means that
     // rules are expanded using breath-first search.
     let mut last_rule: Option<(usize, usize)> = None;
-    for (i, e) in facts.iter().enumerate() {
-        if let Rule(_, _) = e {
-            let mut last_fact: Option<usize> = None;
-            for (j, e2) in facts.iter().enumerate() {
+    'outer: for (j, e2) in facts.iter().enumerate().rev() {
+        for (i, e) in facts.iter().enumerate().rev() {
+            if let Rule(_, _) = e {
                 if let Some(new_expr) = match_rule(e, e2) {
                     if !can_add(&new_expr) {
-                        if last_fact.is_none() || last_fact.unwrap() < j {
-                            last_fact = Some(j);
-                        }
+                        last_rule = Some((i, j));
+                        break 'outer;
                     }
-                }
-            }
-            if let Some(j) = last_fact {
-                if last_rule.is_none() || last_rule.unwrap().1 < j {
-                    last_rule = Some((i, j));
                 }
             }
         }
