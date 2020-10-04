@@ -12,5 +12,6 @@ Special commands:
 - echo <expr>         prints out debug format of expression
 - help hide           more help about hiding and showing facts and rules
 - help pairs          more help about pairs
+- help roles          more help about roles
 
 Type in an expression in avatar logic, e.g. `(a, q'(b))`
