@@ -13,5 +13,6 @@ Special commands:
 - help hide           more help about hiding and showing facts and rules
 - help pairs          more help about pairs
 - help roles          more help about roles
+- help avatars        more help about avatars
 
 Type in an expression in avatar logic, e.g. `(a, q'(b))`
