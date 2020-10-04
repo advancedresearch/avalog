@@ -630,7 +630,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
         !filter_cache.contains(new_expr)
     };
 
-    for e in facts {
+    for e in facts.iter().rev() {
         // Detect ambiguous roles.
         if let RoleOf(a, b) = e {
             for e2 in facts {
