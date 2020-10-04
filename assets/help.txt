@@ -9,6 +9,8 @@ Special commands:
 - prove <expr>        prove a goal
 - import "<file>"     imports an Avalog file
 - clear               clears all facts and rules
+- maxsize <number>    proof search uses maximum number of facts and rules
+- no maxsize          proof search uses unlimited number of facts and rules
 - echo <expr>         prints out debug format of expression
 - help hide           more help about hiding and showing facts and rules
 - help pairs          more help about pairs
