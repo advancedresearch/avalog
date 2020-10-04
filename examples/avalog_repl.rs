@@ -15,6 +15,7 @@ fn main() {
     let mut settings = ProveSettings {
         hide_facts: false,
         hide_rules: false,
+        max_size: Some(600)
     };
     loop {
         use std::io::{self, Write};
@@ -59,6 +60,10 @@ fn main() {
                 settings.hide_rules = false;
                 continue
             }
+            "no maxsize" => {
+                settings.max_size = None;
+                continue
+            }
             "help" => {print_help(); continue}
             "help hide" => {print_help_hide(); continue}
             "help pairs" => {print_help_pairs(); continue}
@@ -89,6 +94,12 @@ fn main() {
                             continue;
                         }
                     }
+                } else if x.starts_with("maxsize ") {
+                    match x[8..].trim().parse::<usize>() {
+                        Ok(n) => settings.max_size = Some(n),
+                        Err(_) => eprintln!("ERROR: Could not parse number"),
+                    };
+                    continue;
                 }
             }
         }
@@ -109,19 +120,23 @@ fn main() {
 pub struct ProveSettings {
     pub hide_facts: bool,
     pub hide_rules: bool,
+    pub max_size: Option<usize>,
 }
 
 fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
+    use std::time::SystemTime;
     let order_constraints = vec![];
 
+    let start_time = SystemTime::now();
     let res = solve_and_reduce(
         &facts,
         &goals,
-        None,
+        settings.max_size,
         &[],
         &order_constraints,
         infer,
     );
+    let end_time = SystemTime::now();
     let mut count_hidden_facts = 0;
     let mut count_hidden_rules = 0;
     match res {
@@ -166,6 +181,13 @@ fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
         println!("OK");
     } else {
         println!("ERROR");
+        if let Some(m) = settings.max_size {
+            println!("Current maximum number of facts and rules: {}", m);
+        }
+    }
+    match end_time.duration_since(start_time) {
+        Ok(d) => println!("Proof search took {} milliseconds", d.as_millis()),
+        Err(_) => {}
     }
 }
 
