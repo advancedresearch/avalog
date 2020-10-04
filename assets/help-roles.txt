@@ -1,0 +1,20 @@
+=== Roles ===
+In Avatar Logic, a role is kind of like a type,
+but is also kind of like a function, or sometimes like a set.
+
+For example:
+
+  london : city       the city London
+
+When you have a pair:
+
+  (a, london)
+
+Avalog adds the following expressions:
+
+  city(a) = london      the city of `a` "is" London
+  city(a) => london     the city of `a` "has" a London
+
+These expressions are used for further inference.
+The expresssion `city(a) = london` means that when you write
+`city(a)` anywhere, it can be substituted with `london`.
