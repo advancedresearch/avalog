@@ -8,6 +8,7 @@ Special commands:
 - bye                 quits the program
 - prove <expr>        prove a goal
 - import "<file>"     imports an Avalog file
+- reload              reload last import while keeping added facts and rules
 - clear               clears all facts and rules
 - maxsize <number>    proof search uses maximum number of facts and rules
 - no maxsize          proof search uses unlimited number of facts and rules
