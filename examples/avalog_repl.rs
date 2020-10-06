@@ -15,7 +15,8 @@ fn main() {
     let mut settings = ProveSettings {
         hide_facts: false,
         hide_rules: false,
-        max_size: Some(600)
+        max_size: Some(600),
+        reduce: true,
     };
     let mut last_import: Option<String> = None;
     loop {
@@ -84,6 +85,19 @@ fn main() {
                 if x.starts_with("prove ") {
                     match parse_str(x[6..].trim(), &parent) {
                         Ok(goals) => {
+                            settings.reduce = true;
+                            prove(&goals, &facts, &settings);
+                            continue;
+                        }
+                        Err(err) => {
+                            println!("ERROR:\n{}", err);
+                            continue;
+                        }
+                    }
+                } else if x.starts_with("provenr ") {
+                    match parse_str(x[8..].trim(), &parent) {
+                        Ok(goals) => {
+                            settings.reduce = false;
                             prove(&goals, &facts, &settings);
                             continue;
                         }
@@ -135,6 +149,7 @@ pub struct ProveSettings {
     pub hide_facts: bool,
     pub hide_rules: bool,
     pub max_size: Option<usize>,
+    pub reduce: bool,
 }
 
 fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
@@ -142,7 +157,8 @@ fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
     let order_constraints = vec![];
 
     let start_time = SystemTime::now();
-    let res = solve_and_reduce(
+    let f = if settings.reduce {solve_and_reduce} else {solve};
+    let res = f(
         &facts,
         &goals,
         settings.max_size,
@@ -196,7 +212,12 @@ fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
     } else {
         println!("ERROR");
         if let Some(m) = settings.max_size {
-            println!("Current maximum number of facts and rules: {}", m);
+            let n = match res {Ok(x) | Err(x) => x.len()};
+            if n == m {
+                println!("Maximum limit reached.");
+                println!("Use `maxsize <number>` or `no maxsize` to set limit.");
+                println!("Current maximum number of facts and rules: {}", m);
+            }
         }
     }
     match end_time.duration_since(start_time) {
