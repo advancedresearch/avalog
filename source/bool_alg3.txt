@@ -1,0 +1,7 @@
+import "bool_alg2.txt"
+
+eval bool
+(not(and(not(X), not(Y))), or(X, Y)) :- X : bool, Y : bool.
+(not(or(not(X), not(Y))), and(X, Y)) :- X : bool, Y : bool.
+
+no eval
