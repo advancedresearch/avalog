@@ -1,0 +1,17 @@
+true : bool
+false : bool
+
+amb :- (false, true).
+amb :- (true, false).
+
+(not(false), true)
+(not(true), false)
+(X, Y) :- (not(X), not(Y)), X : bool, Y : bool.
+
+(and(true, true), true)
+(and(X, false), false) :- X : bool.
+(and(false, X), false) :- X : bool.
+
+(or(false, false), false)
+(or(X, true), true) :- X : bool.
+(or(true, X), true) :- X : bool.

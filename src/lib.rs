@@ -540,7 +540,8 @@ fn substitute(r: &Expr, vs: &Vec<(Arc<String>, Expr)>) -> Expr {
             }
             app(a_expr, substitute(b, vs))
         }
-        _ => unimplemented!()
+        Ambiguity(_) => r.clone(),
+        x => unimplemented!("{:?}", x)
     }
 }
 
