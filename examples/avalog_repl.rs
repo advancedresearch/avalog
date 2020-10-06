@@ -107,6 +107,8 @@ fn main() {
         match parse_str(&input, parent) {
             Ok(new_facts) => {
                 facts.extend(new_facts);
+                facts.sort();
+                facts.dedup();
             }
             Err(err) => {
                 println!("ERROR:\n{}", err);
