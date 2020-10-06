@@ -1,0 +1,5 @@
+person {
+  bob,
+  // carl,
+  alice,
+}

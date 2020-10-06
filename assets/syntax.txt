@@ -1,5 +1,7 @@
-_seps: "/(),.:='-"
+_seps: "/(){},.:='-"
 
+19 role_block = [term:"role" .w? "{" .w? .s!.([.w? "," .w?] [
+  .r?([comment .w?]) term:"arg"]) .w? "}"]
 18 amb = {
   ["no" .w? "amb":!"amb"]
   ["amb":"amb"]
@@ -50,6 +52,7 @@ _seps: "/(),.:='-"
   ["import" .w! .t!:"import"]
   ["eval" .w! .._seps!:"eval"]
   ["no" .w! "eval":"no_eval"]
+  role_block
   [expr:"expr" .w?]
   comment
 })
