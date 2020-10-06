@@ -17,6 +17,7 @@ fn main() {
         hide_rules: false,
         max_size: Some(600)
     };
+    let mut last_import: Option<String> = None;
     loop {
         use std::io::{self, Write};
 
@@ -64,6 +65,14 @@ fn main() {
                 settings.max_size = None;
                 continue
             }
+            "reload" => {
+                if let Some(v) = last_import.as_ref() {
+                    input = v.into();
+                } else {
+                    println!("ERROR: No last import");
+                    continue;
+                }
+            }
             "help" => {print_help(); continue}
             "help hide" => {print_help_hide(); continue}
             "help pairs" => {print_help_pairs(); continue}
@@ -100,6 +109,9 @@ fn main() {
                         Err(_) => eprintln!("ERROR: Could not parse number"),
                     };
                     continue;
+                } else if x.starts_with("import ") {
+                    last_import = Some(input.clone());
+                    // Don't continue since import is intrinsic.
                 }
             }
         }
