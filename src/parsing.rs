@@ -504,6 +504,7 @@ fn parse_data(
 
     let mut res = vec![];
     let mut eval: Option<Arc<String>> = None;
+    let mut role: Option<Expr> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -528,6 +529,14 @@ fn parse_data(
             match parse(parent.join(&**val)) {
                 Ok(facts) => res.extend(facts),
                 Err(err) => println!("ERROR:\n{}", err),
+            }
+        } else if let Ok((range, val)) = parse_expr("role", convert, ignored) {
+            convert.update(range);
+            role = Some(val);
+        } else if let Ok((range, val)) = parse_expr("arg", convert, ignored) {
+            convert.update(range);
+            if let Some(role) = role.as_ref() {
+                res.push(RoleOf(Box::new(val), Box::new(role.clone())));
             }
         } else {
             let range = convert.ignore();
