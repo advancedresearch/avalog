@@ -403,6 +403,7 @@ impl Expr {
                 }
             }
             App(ref a, ref b) => a.is_const() && b.is_const(),
+            Ava(ref a, ref b) => a.is_const() && b.is_const(),
             _ => false
         }
     }
