@@ -1,0 +1,22 @@
+=== Equality ===
+An equality is an expression of the following form:
+
+  p(a) = b
+
+Equalities are used to substitute sub-expressions in application.
+
+For example, `p(a)` is substituted with `b` when `p(a) = b`.
+
+In Avatar Logic, equalities are inferred from,
+but stored as separated facts, from pairs, e.g. `(a, b)` where `b : p`.
+
+This allows one to control substitution behavior.
+
+For example, a 1-avatar `territory` might be used to describe
+countries that share the same capital. When asking
+what the capital is of the country, it is convenient to lift the equality:
+
+  capital(X) = Y :- capital(territory'(X)) = Y.
+
+When a "has" relation `p(a) => q'(b)` where `uniq q`,
+it is lifted to `p(a) = q'(b)` automatically.
