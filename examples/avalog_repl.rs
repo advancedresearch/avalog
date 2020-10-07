@@ -213,7 +213,7 @@ fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
         println!("ERROR");
         if let Some(m) = settings.max_size {
             let n = match res {Ok(x) | Err(x) => x.len()};
-            if n == m {
+            if n >= m {
                 println!("Maximum limit reached.");
                 println!("Use `maxsize <number>` or `no maxsize` to set limit.");
                 println!("Current maximum number of facts and rules: {}", m);
