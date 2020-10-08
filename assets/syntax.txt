@@ -9,6 +9,7 @@ _seps: "/(){},.:='-"
 17 rule_term = {
   role_of:"role_of"
   "amb":"amb"
+  has:"has"
   eq:"eq"
   rel:"rel"
 }

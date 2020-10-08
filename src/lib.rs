@@ -436,6 +436,10 @@ fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>, tail: &mut Vec<Ex
             bind(a1, a2, vs, tail) &&
             bind(b1, b2, vs, tail)
         }
+        (&Has(ref a1, ref b1), &Eq(ref a2, ref b2)) => {
+            bind(a1, a2, vs, tail) &&
+            bind(b1, b2, vs, tail)
+        }
         (&App(ref a1, ref b1), &App(ref a2, ref b2)) if b1.is_tail() &&
             a2.arity() >= a1.arity() && b2.is_const() => {
             tail.push((**b2).clone());
@@ -519,6 +523,9 @@ fn substitute(r: &Expr, vs: &Vec<(Arc<String>, Expr)>) -> Expr {
         }
         Eq(a, b) => {
             eq(substitute(a, vs), substitute(b, vs))
+        }
+        Has(a, b) => {
+            has(substitute(a, vs), substitute(b, vs))
         }
         App(a, b) => {
             let a_expr = substitute(a, vs);
