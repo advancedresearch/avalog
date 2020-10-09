@@ -47,7 +47,6 @@ _seps: "/(){},.:='-"
   has:"has"
   eq:"eq"
   rel:"rel"
-  term
 }
 1 data = .l({
   ["import" .w! .t!:"import"]
