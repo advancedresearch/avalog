@@ -578,7 +578,8 @@ fn equal(a: &Expr, b: &Expr) -> Option<bool> {
     else {
         match (a, b) {
             (&Sym(_), &Sym(_)) => None,
-            (&Sym(_), &Ava(_, _)) => Some(false),
+            (&Sym(_), &Ava(_, _)) |
+            (&Ava(_, _), &Sym(_)) => Some(false),
             (&Ava(ref a1, ref b1), &Ava(ref a2, ref b2)) => {
                 let cmp_a = equal(a1, a2);
                 if false_or_none(cmp_a) {return cmp_a};
