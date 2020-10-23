@@ -585,7 +585,7 @@ fn match_rule(r: &Expr, rel: &Expr) -> Option<Expr> {
                     new_args.push(new_e);
                 }
                 let new_res = substitute(res, &vs);
-                if new_args.len() > 1 {
+                if new_args.len() > 0 {
                     return Some(Rule(Box::new(new_res), new_args));
                 } else {
                     return Some(new_res);
