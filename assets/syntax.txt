@@ -1,5 +1,6 @@
-_seps: "/(){},.:='-"
+_seps: "/(){},.:='-!"
 
+20 neq = [term:"left" .w? "!=" .w? term:"right"]
 19 role_block = [term:"role" .w? "{" .w? .s!.([.w? "," .w?] [
   .r?([comment .w?]) term:"arg"]) .w? "}"]
 18 amb = {
@@ -11,6 +12,7 @@ _seps: "/(){},.:='-"
   "amb":"amb"
   has:"has"
   eq:"eq"
+  neq:"neq"
   rel:"rel"
 }
 16 rule = [rule_term:"res" .w? ":-" .w? .s!([.w? "," .w?] rule_term:"arg") .w? "."]
