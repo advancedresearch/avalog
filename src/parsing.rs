@@ -280,6 +280,42 @@ fn parse_eq(
     )))
 }
 
+fn parse_neq(
+    node: &str,
+    mut convert: Convert,
+    ignored: &mut Vec<Range>
+) -> Result<(Range, Expr), ()> {
+    let start = convert;
+    let start_range = convert.start_node(node)?;
+    convert.update(start_range);
+
+    let mut left: Option<Expr> = None;
+    let mut right: Option<Expr> = None;
+    loop {
+        if let Ok(range) = convert.end_node(node) {
+            convert.update(range);
+            break;
+        } else if let Ok((range, val)) = parse_expr("left", convert, ignored) {
+            convert.update(range);
+            left = Some(val);
+        } else if let Ok((range, val)) = parse_expr("right", convert, ignored) {
+            convert.update(range);
+            right = Some(val);
+        } else {
+            let range = convert.ignore();
+            convert.update(range);
+            ignored.push(range);
+        }
+    }
+
+    let left = left.ok_or(())?;
+    let right = right.ok_or(())?;
+    Ok((convert.subtract(start), Expr::Neq(
+        Box::new(left),
+        Box::new(right)
+    )))
+}
+
 fn parse_role_of(
     node: &str,
     mut convert: Convert,
@@ -464,6 +500,9 @@ fn parse_expr(
             convert.update(range);
             expr = Some(val);
         } else if let Ok((range, val)) = parse_eq("eq", convert, ignored) {
+            convert.update(range);
+            expr = Some(val);
+        } else if let Ok((range, val)) = parse_neq("neq", convert, ignored) {
             convert.update(range);
             expr = Some(val);
         } else if let Ok((range, val)) = parse_has("has", convert, ignored) {

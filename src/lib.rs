@@ -178,6 +178,8 @@ pub enum Expr {
     RoleOf(Box<Expr>, Box<Expr>),
     /// An equality, e.g. `p(a) = b`.
     Eq(Box<Expr>, Box<Expr>),
+    /// An inequality, e.g. `X != a`.
+    Neq(Box<Expr>, Box<Expr>),
     /// A set membership relation, e.g. `p(a) ∋ b`.
     Has(Box<Expr>, Box<Expr>),
     /// Apply an argument to a role, e.g. `p(a)`.
@@ -211,6 +213,7 @@ impl fmt::Display for Expr {
             UniqAva(a) => write!(w, "uniq {}", a)?,
             RoleOf(a, b) => write!(w, "{} : {}", a, b)?,
             Eq(a, b) => write!(w, "{} = {}", a, b)?,
+            Neq(a, b) => write!(w, "{} != {}", a, b)?,
             Has(a, b) => write!(w, "{} => {}", a, b)?,
             App(a, b) => {
                 let mut expr = a;
@@ -314,6 +317,13 @@ pub fn eq<T, U>(a: T, b: U) -> Expr
     Eq(Box::new(a.into()), Box::new(b.into()))
 }
 
+/// Constructs an inequality expression.
+pub fn neq<T, U>(a: T, b: U) -> Expr
+    where T: Into<Expr>, U: Into<Expr>
+{
+    Neq(Box::new(a.into()), Box::new(b.into()))
+}
+
 /// Constructs a "has" expression e.g. `p(a) => b`.
 pub fn has<T, U>(a: T, b: U) -> Expr
     where T: Into<Expr>, U: Into<Expr>
@@ -384,6 +394,7 @@ impl Expr {
             Ava(_, _) => self.clone(),
             Inner(_) => self.clone(),
             Eq(_, _) => self.clone(),
+            Neq(_, _) => self.clone(),
             Has(_, _) => self.clone(),
             AmbiguousRole(_, _, _) => self.clone(),
             AmbiguousRel(_, _, _) => self.clone(),
@@ -524,6 +535,9 @@ fn substitute(r: &Expr, vs: &Vec<(Arc<String>, Expr)>) -> Expr {
         Eq(a, b) => {
             eq(substitute(a, vs), substitute(b, vs))
         }
+        Neq(a, b) => {
+            neq(substitute(a, vs), substitute(b, vs))
+        }
         Has(a, b) => {
             has(substitute(a, vs), substitute(b, vs))
         }
@@ -561,10 +575,21 @@ fn match_rule(r: &Expr, rel: &Expr) -> Option<Expr> {
             if args.len() > 1 {
                 let mut new_args = vec![];
                 for e in &args[1..] {
-                    new_args.push(substitute(e, &vs));
+                    let new_e = substitute(e, &vs);
+                    if let Neq(a, b) = &new_e {
+                        if a.is_const() && b.is_const() {
+                            if a == b {return None}
+                            else {continue}
+                        }
+                    }
+                    new_args.push(new_e);
                 }
                 let new_res = substitute(res, &vs);
-                return Some(Rule(Box::new(new_res), new_args));
+                if new_args.len() > 1 {
+                    return Some(Rule(Box::new(new_res), new_args));
+                } else {
+                    return Some(new_res);
+                }
             } else {
                 let new_res = substitute(res, &vs);
                 return Some(new_res);
