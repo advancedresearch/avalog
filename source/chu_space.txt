@@ -1,0 +1,50 @@
+//
+// A Chu space based on introduction example for Cartesian frames:
+// https://www.lesswrong.com/posts/BSpdshJWGAW6TuNzZ/introduction-to-cartesian-frames
+//
+
+// Generate negative roles (this makes them right-exclusive).
+not'(X) : Y :- X : Y, X != not'(Z).
+
+// Create negative agents.
+(not'(X), agent) :- (X, agent), X != not'(Y).
+
+// Create negative environments.
+(not'(X), env) :- (X, env), X != not'(Y).
+
+// Commute agent and environment to make roles
+// both right-exclusive and left-exclusive.
+(Y, X) :- (X, Y), (X, agent), (Y, env).
+
+// Make agent vs agent relations ambiguous.
+amb :- (X, Y), (X, agent), (Y, agent).
+
+// Make environment vs environment relations ambiguous.
+amb :- (X, Y), (X, env), (Y, env).
+
+// Generate all simple products of agents and environments.
+(X, Y) :- (X, agent), (Y, env), (X, prod), (Y, prod).
+
+// Generate the inverse agent for destructive environments.
+(not'(X), Y) :- (X, agent), (Y, env), (Y, destr).
+
+u : umbrella
+n : no_umbrella
+
+r : rain
+s : sun
+m : meteorite
+
+(u, agent)
+(n, agent)
+
+(u, prod)
+(n, prod)
+
+(r, env)
+(s, env)
+(m, env)
+
+(r, prod)
+(s, prod)
+(m, destr)
