@@ -567,6 +567,29 @@ fn substitute(r: &Expr, vs: &Vec<(Arc<String>, Expr)>) -> Expr {
     }
 }
 
+// Returns `Some(true)` if two expressions are proven to be equal,
+// `Some(false)` when proven to be inequal, and `None` when unknown.
+fn equal(a: &Expr, b: &Expr) -> Option<bool> {
+    fn false_or_none(val: Option<bool>) -> bool {
+        if let Some(val) = val {!val} else {true}
+    }
+
+    if a.is_const() && b.is_const() {Some(a == b)}
+    else {
+        match (a, b) {
+            (&Sym(_), &Sym(_)) => None,
+            (&Sym(_), &Ava(_, _)) => Some(false),
+            (&Ava(ref a1, ref b1), &Ava(ref a2, ref b2)) => {
+                let cmp_a = equal(a1, a2);
+                if false_or_none(cmp_a) {return cmp_a};
+                equal(b1, b2)
+            }
+            // TODO: Handle other cases.
+            x => unimplemented!("{:?}", x)
+        }
+    }
+}
+
 fn match_rule(r: &Expr, rel: &Expr) -> Option<Expr> {
     if let Rule(res, args) = r {
         let mut vs = vec![];
@@ -577,9 +600,10 @@ fn match_rule(r: &Expr, rel: &Expr) -> Option<Expr> {
                 for e in &args[1..] {
                     let new_e = substitute(e, &vs);
                     if let Neq(a, b) = &new_e {
-                        if a.is_const() && b.is_const() {
-                            if a == b {return None}
-                            else {continue}
+                        match equal(a, b) {
+                            Some(true) => return None,
+                            Some(false) => continue,
+                            None => {}
                         }
                     }
                     new_args.push(new_e);
