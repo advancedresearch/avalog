@@ -3,6 +3,9 @@
 // https://www.lesswrong.com/posts/BSpdshJWGAW6TuNzZ/introduction-to-cartesian-frames
 //
 
+// Do not allow multiple `not`s.
+uniq not
+
 // Generate negative roles (this makes them right-exclusive).
 not'(X) : Y :- X : Y, X != not'(Z).
 

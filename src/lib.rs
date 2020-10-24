@@ -745,7 +745,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                         if let Rel(a2, b2) = e1 {
                             if a2 == a && b2 != b {
                                 if let Ava(av2, _) = &**b2 {
-                                    if av2 != av {
+                                    if uniq || av2 != av {
                                         for e2 in facts {
                                             if let RoleOf(a3, b3) = e2 {
                                                 if a3 == b2 && &**b3 == b_role {
@@ -754,12 +754,6 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                                                     if can_add(&new_expr) {return Some(new_expr)};
                                                 }
                                             }
-                                        }
-                                    } else {
-                                        if uniq {
-                                            let new_expr = ambiguous_rel((**a).clone(),
-                                                (**b).clone(), (**b2).clone());
-                                            if can_add(&new_expr) {return Some(new_expr)};
                                         }
                                     }
                                 }
