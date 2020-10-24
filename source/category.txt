@@ -1,0 +1,48 @@
+//
+// Formalization of Category Theory
+//
+
+// Composition.
+(X, G'(F'(Z))) :-
+  (X, F'(Y)), F != id, Y != F1'(X1),
+  (Y, G'(Z)), G != id, Z != F2'(X2),
+  F'(Y) : T1, G'(Z) : T2.
+
+// Identity morphism is unique.
+uniq id
+
+// Identity morphism.
+(X, id'(X)) :- (X, obj).
+
+// Make relation between objects, that are not identical, ambiguous.
+amb :- (X, Y), X != Y, (X, obj), (Y, obj).
+
+// Role identity.
+F'(X) : F :- (Y, F'(X)), X != G'(Z).
+
+// Role uniqueness.
+uniq F :- (X, F'(Y)).
+
+// Create objects from relations.
+(A, obj) :- (A, F'(B)).
+(B, obj) :- (A, F'(B)).
+
+////////////////////////////////////////////////////////////////////
+// Examples (remove this section when reusing the definition)
+
+(a, f'(b))
+(b, g'(a))
+
+// Prove an isomorphism from `a` to `b`.
+(.g(.f(a)), a)
+(.f(.g(b)), b)
+
+// Prove identity map from every object to itself.
+(.id(X), X) :- (X, obj).
+
+(a2, f'(b2))
+(b2, g'(c2))
+(a2, h'(c2))
+
+// Prove composition.
+(.g(.f(a2)), .h(a2))
