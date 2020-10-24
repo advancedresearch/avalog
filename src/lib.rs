@@ -580,7 +580,8 @@ fn equal(a: &Expr, b: &Expr) -> Option<bool> {
     if a.is_const() && b.is_const() {Some(a == b)}
     else {
         match (a, b) {
-            (&Sym(_), &Sym(_)) => None,
+            (&Sym(_), &Sym(_)) |
+            (&App(_, _), &Ava(_, _)) => None,
             (&Sym(_), &Ava(_, _)) |
             (&Ava(_, _), &Sym(_)) => Some(false),
             (&Ava(ref a1, ref b1), &Ava(ref a2, ref b2)) => {
