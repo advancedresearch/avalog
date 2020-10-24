@@ -11,7 +11,7 @@
 // Identity morphism.
 (X, id'(X)) :- (X, obj).
 
-// Make relation between objects,
+// Make relations between objects,
 // that are not identical, ambiguous.
 amb :- (X, Y), X != Y, (X, obj), (Y, obj).
 
