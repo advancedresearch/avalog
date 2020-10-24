@@ -8,6 +8,7 @@ _seps: "/(){},.:='-!"
   ["amb":"amb"]
 }
 17 rule_term = {
+  uniq:"uniq"
   role_of:"role_of"
   "amb":"amb"
   has:"has"
