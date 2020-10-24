@@ -563,6 +563,9 @@ fn substitute(r: &Expr, vs: &Vec<(Arc<String>, Expr)>) -> Expr {
             app(a_expr, substitute(b, vs))
         }
         Ambiguity(_) => r.clone(),
+        UniqAva(a) => {
+            uniq_ava(substitute(a, vs))
+        }
         x => unimplemented!("{:?}", x)
     }
 }
