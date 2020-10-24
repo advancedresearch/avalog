@@ -859,16 +859,18 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
         }
     }
 
-    let mut amb = false;
-    for e in facts {
-        if let AmbiguousRel(_, _, _) = e {
-            amb = true;
-        } else if let AmbiguousRole(_, _, _) = e {
-            amb = true;
+    if !cache.contains(&Ambiguity(true)) {
+        let mut amb = false;
+        for e in facts {
+            if let AmbiguousRel(_, _, _) = e {
+                amb = true;
+            } else if let AmbiguousRole(_, _, _) = e {
+                amb = true;
+            }
         }
+        let new_expr = Ambiguity(amb);
+        if can_add(&new_expr) {return Some(new_expr)};
     }
-    let new_expr = Ambiguity(amb);
-    if can_add(&new_expr) {return Some(new_expr)};
     None
 }
 
