@@ -8,13 +8,11 @@
   (Y, G'(Z)), G != id, Z != F2'(X2),
   F'(Y) : T1, G'(Z) : T2.
 
-// Identity morphism is unique.
-uniq id
-
 // Identity morphism.
 (X, id'(X)) :- (X, obj).
 
-// Make relation between objects, that are not identical, ambiguous.
+// Make relation between objects,
+// that are not identical, ambiguous.
 amb :- (X, Y), X != Y, (X, obj), (Y, obj).
 
 // Role identity.
