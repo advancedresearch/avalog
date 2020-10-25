@@ -1,0 +1,16 @@
+// Composition.
+(X, Z) :- (X, Y), (Y, Z).
+
+//
+// A commutative square:
+//
+// a ----> c
+// |       |
+// |       |
+// v       v
+// b ----> d
+//
+(a, b)
+(c, d)
+(a, c)
+(b, d)
