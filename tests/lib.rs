@@ -39,3 +39,11 @@ fn assocativity() {
 fn bool_alg() {
     check("source/bool_alg.txt", "source/bool_alg-0.txt");
 }
+
+#[test]
+fn squares() {
+    check("source/squares.txt", "source/squares-0.txt");
+    check("source/squares2.txt", "source/squares2-0.txt");
+    check("source/squares3.txt", "source/squares3-0.txt");
+    check("source/squares4.txt", "source/squares4-0.txt");
+}

@@ -1,0 +1,15 @@
+// Composition.
+(X, Z) :- (X, Y), (Y, Z).
+
+//
+// A zig zag pattern:
+//
+// a ----> b
+//       /
+//     /
+//   L
+// c ----> d
+//
+(a, b)
+(b, c)
+(c, d)

@@ -1,0 +1,6 @@
+(square, one) :- (a, b), (a, c), (b, d), (c, d).
+
+(a, b)
+(a, c)
+(b, d)
+(c, d)

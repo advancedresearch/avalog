@@ -1,0 +1,7 @@
+// Composition.
+(X, Z) :- (X, Y), (Y, Z).
+
+(a, b)
+(b, c)
+(c, d)
+(d, e)
