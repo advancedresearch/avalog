@@ -82,6 +82,7 @@ fn main() {
             "help application" => {print_help_application(); continue}
             "help rules" => {print_help_rules(); continue}
             "help equality" => {print_help_equality(); continue}
+            "help inequality" => {print_help_inequality(); continue}
             x => {
                 if x.starts_with("prove ") {
                     match parse_str(x[6..].trim(), &parent) {
@@ -235,3 +236,4 @@ fn print_help_avatars() {print!("{}", include_str!("../assets/help-avatars.txt")
 fn print_help_application() {print!("{}", include_str!("../assets/help-application.txt"))}
 fn print_help_rules() {print!("{}", include_str!("../assets/help-rules.txt"))}
 fn print_help_equality() {print!("{}", include_str!("../assets/help-equality.txt"))}
+fn print_help_inequality() {print!("{}", include_str!("../assets/help-inequality.txt"))}
