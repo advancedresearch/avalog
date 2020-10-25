@@ -1,0 +1,16 @@
+=== Inequality ===
+Avatar Logic supports inequality in rules.
+
+For example:
+
+  (a, foo)
+  (X, Y) :- (Y, X), X != foo.
+
+Since `foo != foo` is false, the pair `(foo, a)` will not be generated.
+
+Variables can be used as patterns:
+
+  (X, Y) :- (Y, X), X != F'(Z).
+
+Inequality is often used to terminate rules,
+that otherwise would expand infinitely.
