@@ -24,3 +24,18 @@ fn capital() {
 fn category() {
     check("source/category.txt", "source/category-0.txt");
 }
+
+#[test]
+fn chu_space() {
+    check("source/chu_space.txt", "source/no_amb.txt");
+}
+
+#[test]
+fn assocativity() {
+    check("source/associativity.txt", "source/associativity-0.txt");
+}
+
+#[test]
+fn bool_alg() {
+    check("source/bool_alg.txt", "source/bool_alg-0.txt");
+}
