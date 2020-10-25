@@ -691,15 +691,41 @@ fn apply(e: &Expr, facts: &[Expr]) -> Option<Expr> {
 
 /// Specifies inference rules for monotonic solver.
 pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]) -> Option<Expr> {
+    use std::collections::HashMap;
+
     let can_add = |new_expr: &Expr| {
         !cache.contains(new_expr) &&
         !filter_cache.contains(new_expr)
     };
 
+    // Build an index to improve worst-case performance.
+    let mut index: HashMap<Expr, Vec<usize>> = HashMap::new();
+    let mut insert = |i: usize, e: &Expr| {
+        index.entry(e.clone()).or_insert(vec![]).push(i);
+    };
+    for (i, e) in facts.iter().enumerate() {
+        match e {
+            RoleOf(a, b) | Rel(a, b) | Ava(a, b) | Eq(a, b) |
+            Neq(a, b) | Has(a, b) | App(a, b) => {
+                insert(i, a);
+                insert(i, b);
+            }
+            Sym(_) | Inner(_) | UniqAva(_) => insert(i, e),
+            AmbiguousRel(_, _, _) |
+            AmbiguousRole(_, _, _) |
+            Rule(_, _) |
+            Ambiguity(_) |
+            Tail | TailSym(_) | List(_) => {}
+        }
+    }
+    let find = |e: &Expr| {
+        index.get(e).unwrap().iter().map(|&i| &facts[i])
+    };
+
     for e in facts.iter().rev() {
         // Detect ambiguous roles.
         if let RoleOf(a, b) = e {
-            for e2 in facts {
+            for e2 in find(a) {
                 if let RoleOf(a2, b2) = e2 {
                     if a2 == a && b2 != b {
                         let new_expr = ambiguous_role((**a).clone(), (**b).clone(), (**b2).clone());
@@ -730,7 +756,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                 // Avatar Binary Relation.
                 let mut b_role: Option<Expr> = None;
                 let mut uniq = false;
-                for e2 in facts {
+                for e2 in find(b) {
                     if let RoleOf(b2, r) = e2 {
                         if b2 == b {
                             if cache.contains(&uniq_ava((**av).clone())) {
@@ -748,12 +774,12 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
 
                 // Look for another avatar relation with same role.
                 if let Some(b_role) = &b_role {
-                    for e1 in facts {
+                    for e1 in find(a) {
                         if let Rel(a2, b2) = e1 {
                             if a2 == a && b2 != b {
                                 if let Ava(av2, _) = &**b2 {
                                     if uniq || av2 != av {
-                                        for e2 in facts {
+                                        for e2 in find(b2) {
                                             if let RoleOf(a3, b3) = e2 {
                                                 if a3 == b2 && &**b3 == b_role {
                                                     let new_expr = ambiguous_rel((**a).clone(),
@@ -771,7 +797,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
             } else {
                 // Unique Universal Binary Relation.
                 let mut b_role: Option<Expr> = None;
-                for e2 in facts {
+                for e2 in find(b) {
                     if let RoleOf(b2, r) = e2 {
                         if b2 == b {
                             let new_expr = eq(app((**r).clone(), (**a).clone()), (**b).clone());
@@ -785,7 +811,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
 
                 // Look for another relation with same role.
                 if let Some(b_role) = &b_role {
-                    for e1 in facts {
+                    for e1 in find(a) {
                         if let Rel(a2, b2) = e1 {
                             if a2 == a && b2 != b {
                                 if cache.contains(&role_of((**b2).clone(), b_role.clone())) {
