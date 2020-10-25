@@ -1,16 +1,25 @@
 === Pairs ===
 In Avatar Logic, data consists mainly of ordered pairs.
 
+A pair can also be thought of as a directed edge between two nodes.
+
 For example:
 
   (a, b)          pair with two concrete elements `a` and `b`
+                  an edge from `a` to `b`
   (a, q'(b))      pair with a 1-avatar `q'(b)`
+                  an edge from `a` to `q'(b)`
   (a, p(b))       pair with application `p(b)`
+                  an edge from `a` to `p(b)`
 
 This is different from normal logic, where predicates are used instead.
 
 The benefit of using pairs is that can think about the underlying
-data as a matrix with column and rows for each term.
+data as a matrix with columns and rows for each term.
+The data of pairs also can also be thought of as a graph,
+with nodes and edges, where each edge is a pair.
 
 The left argument `A` of the pair `(A, B)` can be thought of as
 the input, while the right argument `B` can be thought of as the output.
+
+What pairs mean depends on the interpretation of what you are modeling.
