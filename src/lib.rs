@@ -730,6 +730,9 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                     if a2 == a && b2 != b {
                         let new_expr = ambiguous_role((**a).clone(), (**b).clone(), (**b2).clone());
                         if can_add(&new_expr) {return Some(new_expr)};
+
+                        let new_expr = Ambiguity(true);
+                        if can_add(&new_expr) {return Some(new_expr)};
                     }
                 }
             }
@@ -785,6 +788,9 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                                                     let new_expr = ambiguous_rel((**a).clone(),
                                                         (**b).clone(), (**b2).clone());
                                                     if can_add(&new_expr) {return Some(new_expr)};
+
+                                                    let new_expr = Ambiguity(true);
+                                                    if can_add(&new_expr) {return Some(new_expr)};
                                                 }
                                             }
                                         }
@@ -817,6 +823,9 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                                 if cache.contains(&role_of((**b2).clone(), b_role.clone())) {
                                     let new_expr = ambiguous_rel((**a).clone(),
                                         (**b).clone(), (**b2).clone());
+                                    if can_add(&new_expr) {return Some(new_expr)};
+                                    
+                                    let new_expr = Ambiguity(true);
                                     if can_add(&new_expr) {return Some(new_expr)};
                                 }
                             }
