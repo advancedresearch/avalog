@@ -3,7 +3,7 @@
 //
 
 // Composition.
-(X, G'(F'(Z))) :-
+(X, F'(G'(Z))) :-
   (X, F'(Y)), F != id, Y != F1'(X1),
   (Y, G'(Z)), G != id, Z != F2'(X2),
   F'(Y) : T1, G'(Z) : T2.
@@ -22,8 +22,8 @@ F'(X) : F :- (Y, F'(X)), X != G'(Z).
 uniq F :- (X, F'(Y)).
 
 // Create objects from relations.
-(A, obj) :- (A, F'(B)).
-(B, obj) :- (A, F'(B)).
+(A, obj) :- (A, F'(B)), B != G'(C).
+(B, obj) :- (A, F'(B)), B != G'(C).
 
 ////////////////////////////////////////////////////////////////////
 // Examples (remove this section when reusing the definition)
