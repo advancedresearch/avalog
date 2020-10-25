@@ -1,7 +1,7 @@
 use avalog::*;
 
 fn main() {
-    println!("=== Avalog 0.2 ===");
+    println!("=== Avalog 0.3 ===");
     println!("Type `help` for more information.");
 
     let ref parent = match std::env::current_dir() {
