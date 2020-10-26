@@ -3,7 +3,7 @@ use std::time::SystemTime;
 use avalog::*;
 
 fn main() {
-    println!("=== Avalog 0.3 ===");
+    println!("=== Avalog 0.4 ===");
     println!("Type `help` for more information.");
 
     let ref parent = match std::env::current_dir() {
