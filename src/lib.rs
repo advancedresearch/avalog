@@ -433,7 +433,8 @@ impl Expr {
     }
 }
 
-fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>, tail: &mut Vec<Expr>) -> bool {
+/// Bind `a` to pattern `e`.
+pub fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>, tail: &mut Vec<Expr>) -> bool {
     match (e, a) {
         (&Rel(ref a1, ref b1), &Rel(ref a2, ref b2)) => {
             bind(a1, a2, vs, tail) &&

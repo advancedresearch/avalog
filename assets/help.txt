@@ -6,6 +6,7 @@ https://github.com/advancedresearch/path_semantics/blob/master/sequences.md#avat
 
 Special commands:
 - bye                 quits the program
+- ? <pat>             search for a pattern
 - prove <expr>        prove a goal
 - provenr <expr>      prove a goal without reduction of the proof
 - import "<file>"     imports an Avalog file

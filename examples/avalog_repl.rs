@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use avalog::*;
 
 fn main() {
@@ -84,7 +86,18 @@ fn main() {
             "help equality" => {print_help_equality(); continue}
             "help inequality" => {print_help_inequality(); continue}
             x => {
-                if x.starts_with("prove ") {
+                if x.starts_with("?") {
+                    match parse_str(x[1..].trim(), &parent) {
+                        Ok(pat) => {
+                            search_pat(&pat, &facts, &settings);
+                            continue;
+                        }
+                        Err(err) => {
+                            println!("ERROR:\n{}", err);
+                            continue;
+                        }
+                    }
+                } else if x.starts_with("prove ") {
                     match parse_str(x[6..].trim(), &parent) {
                         Ok(goals) => {
                             settings.reduce = true;
@@ -154,10 +167,68 @@ pub struct ProveSettings {
     pub reduce: bool,
 }
 
-fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
-    use std::time::SystemTime;
-    let order_constraints = vec![];
+fn conclusion(
+    res: &Result<Vec<Expr>, Vec<Expr>>,
+    start_time: SystemTime,
+    end_time: SystemTime,
+    settings: &ProveSettings,
+) {
+    println!("");
+    if res.is_ok() {
+        println!("OK");
+    } else {
+        println!("ERROR");
+        if let Some(m) = settings.max_size {
+            let n = match res {Ok(x) | Err(x) => x.len()};
+            if n >= m {
+                println!("Maximum limit reached.");
+                println!("Use `maxsize <number>` or `no maxsize` to set limit.");
+                println!("Current maximum number of facts and rules: {}", m);
+            }
+        }
+    }
+    match end_time.duration_since(start_time) {
+        Ok(d) => println!("Proof search took {} milliseconds", d.as_millis()),
+        Err(_) => {}
+    }
+}
 
+fn search_pat(pat: &[Expr], facts: &[Expr], settings: &ProveSettings) {
+    if pat.len() == 0 {return};
+
+    let pat = &pat[0];
+    let start_time = SystemTime::now();
+    let res = search(
+        &facts,
+        |e| {
+            let mut vs = vec![];
+            let mut tail = vec![];
+            if bind(pat, e, &mut vs, &mut tail) {
+                Some(e.clone())
+            } else {
+                None
+            }
+        },
+        settings.max_size,
+        &[],
+        &[],
+        infer
+    );
+    let end_time = SystemTime::now();
+    let n: usize;
+    match res {
+        Ok(ref res) | Err(ref res) => {
+            for r in res {
+                println!("{}", r);
+            }
+            n = res.len();
+        }
+    }
+    conclusion(&res, start_time, end_time, settings);
+    println!("{} results found", n);
+}
+
+fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
     let start_time = SystemTime::now();
     let f = if settings.reduce {solve_and_reduce} else {solve};
     let res = f(
@@ -165,7 +236,7 @@ fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
         &goals,
         settings.max_size,
         &[],
-        &order_constraints,
+        &[],
         infer,
     );
     let end_time = SystemTime::now();
@@ -208,24 +279,7 @@ fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
         }
     }
 
-    println!("");
-    if res.is_ok() {
-        println!("OK");
-    } else {
-        println!("ERROR");
-        if let Some(m) = settings.max_size {
-            let n = match res {Ok(x) | Err(x) => x.len()};
-            if n >= m {
-                println!("Maximum limit reached.");
-                println!("Use `maxsize <number>` or `no maxsize` to set limit.");
-                println!("Current maximum number of facts and rules: {}", m);
-            }
-        }
-    }
-    match end_time.duration_since(start_time) {
-        Ok(d) => println!("Proof search took {} milliseconds", d.as_millis()),
-        Err(_) => {}
-    }
+    conclusion(&res, start_time, end_time, settings);
 }
 
 fn print_help() {print!("{}", include_str!("../assets/help.txt"))}
