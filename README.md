@@ -4,7 +4,7 @@ An experimental implementation of Avatar Logic
 with a Prolog-like syntax.
 
 ```text
-=== Avalog 0.3 ===
+=== Avalog 0.4 ===
 Type `help` for more information.
 > parent'(alice) : mom
 > (bob, parent'(alice))
