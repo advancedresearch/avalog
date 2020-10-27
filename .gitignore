@@ -10,3 +10,5 @@ Cargo.lock
 **/*.rs.bk
 
 examples/test.rs
+tmp.dot
+tmp.png
