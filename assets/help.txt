@@ -26,5 +26,6 @@ Special commands:
 - help rules          more help about rules
 - help equality       more help about equality
 - help inequality     more help about inequality
+- help graph          more help about GraphViz export
 
 Type in an expression in avatar logic, e.g. `(a, q'(b))`

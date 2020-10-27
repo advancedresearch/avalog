@@ -96,6 +96,7 @@ fn main() {
             "help rules" => {print_help_rules(); continue}
             "help equality" => {print_help_equality(); continue}
             "help inequality" => {print_help_inequality(); continue}
+            "help graph" => {print_help_graph(); continue}
             x => {
                 if x.starts_with("?") {
                     match parse_str(x[1..].trim(), &parent) {
@@ -162,6 +163,7 @@ fn main() {
                     if let Some(txt) = json_str(x[7..].trim()) {
                         settings.graph_layout = Some(txt);
                     }
+                    continue;
                 }
             }
         }
@@ -285,7 +287,7 @@ fn export_graph(facts: &[Expr], settings: &ProveSettings, parent: &PathBuf) {
     };
     println!("Exporting to `{}`", file.clone().into_os_string().into_string().unwrap());
 
-    let layout: &str = settings.graph_layout.as_ref().map(|s| &**s).unwrap_or("neato");
+    let layout: &str = settings.graph_layout.as_ref().map(|s| &**s).unwrap_or("dot");
     let node_color = "#ffffffa0";
     let edge_color = "black";
     let mut s = String::new();
@@ -420,3 +422,4 @@ fn print_help_application() {print!("{}", include_str!("../assets/help-applicati
 fn print_help_rules() {print!("{}", include_str!("../assets/help-rules.txt"))}
 fn print_help_equality() {print!("{}", include_str!("../assets/help-equality.txt"))}
 fn print_help_inequality() {print!("{}", include_str!("../assets/help-inequality.txt"))}
+fn print_help_graph() {println!("{}", include_str!("../assets/help-graph.txt"))}
