@@ -1,4 +1,5 @@
 use std::time::SystemTime;
+use std::path::PathBuf;
 
 use avalog::*;
 
@@ -19,8 +20,10 @@ fn main() {
         hide_rules: false,
         max_size: Some(600),
         reduce: true,
+        last_import: None,
+        graph_file: None,
+        graph_layout: None,
     };
-    let mut last_import: Option<String> = None;
     loop {
         use std::io::{self, Write};
 
@@ -69,12 +72,20 @@ fn main() {
                 continue
             }
             "reload" => {
-                if let Some(v) = last_import.as_ref() {
+                if let Some(v) = settings.last_import.as_ref() {
                     input = v.into();
                 } else {
                     println!("ERROR: No last import");
                     continue;
                 }
+            }
+            "graph" => {
+                export_graph(&facts, &settings, parent);
+                continue;
+            }
+            "no graphf" => {
+                settings.graph_file = None;
+                continue;
             }
             "help" => {print_help(); continue}
             "help hide" => {print_help_hide(); continue}
@@ -139,8 +150,18 @@ fn main() {
                     };
                     continue;
                 } else if x.starts_with("import ") {
-                    last_import = Some(input.clone());
+                    settings.last_import = Some(input.clone());
                     // Don't continue since import is intrinsic.
+                } else if x.starts_with("graphf ") {
+                    // Set GraphViz file name.
+                    if let Some(txt) = json_str(x[7..].trim()) {
+                        settings.graph_file = Some(parent.join(&txt));
+                    }
+                    continue;
+                } else if x.starts_with("graphl ") {
+                    if let Some(txt) = json_str(x[7..].trim()) {
+                        settings.graph_layout = Some(txt);
+                    }
                 }
             }
         }
@@ -160,11 +181,31 @@ fn main() {
     }
 }
 
+// Parses a JSON string.
+fn json_str(txt: &str) -> Option<String> {
+    use read_token::ReadToken;
+    let r = ReadToken::new(txt, 0);
+    if let Some(range) = r.string() {
+        if let Ok(txt) = r.parse_string(range.length) {
+            Some(txt)
+        } else {
+            println!("ERROR:\nCould not parse string");
+            None
+        }
+    } else {
+        println!("ERROR:\nExpected string");
+        None
+    }
+}
+
 pub struct ProveSettings {
     pub hide_facts: bool,
     pub hide_rules: bool,
     pub max_size: Option<usize>,
     pub reduce: bool,
+    pub last_import: Option<String>,
+    pub graph_file: Option<PathBuf>,
+    pub graph_layout: Option<String>,
 }
 
 fn conclusion(
@@ -191,6 +232,94 @@ fn conclusion(
         Ok(d) => println!("Proof search took {} milliseconds", d.as_millis()),
         Err(_) => {}
     }
+}
+
+fn export_graph(facts: &[Expr], settings: &ProveSettings, parent: &PathBuf) {
+    use std::fmt::Write;
+    use std::collections::{HashMap, HashSet};
+    use std::fs::File;
+
+    let start_time = SystemTime::now();
+    let res = search(
+        &facts,
+        |e| if let Expr::Rel(_, _) = e {Some(e.clone())}
+            else if let Expr::RoleOf(_, _) = e {Some(e.clone())}
+            else {None},
+        settings.max_size,
+        &[],
+        &[],
+        infer
+    );
+    let end_time = SystemTime::now();
+    let n: usize;
+    let mut nodes: HashSet<Expr> = HashSet::new();
+    let mut roles: HashMap<Expr, Expr> = HashMap::new();
+    match res {
+        Ok(ref res) | Err(ref res) => {
+            for e in res {
+                if let Expr::Rel(a, b) = e {
+                    if !nodes.contains(a) {nodes.insert((**a).clone());}
+                    if !nodes.contains(b) {nodes.insert((**b).clone());}
+                } else if let Expr::RoleOf(a, b) = e {
+                    if !roles.contains_key(a) {
+                        roles.insert((**a).clone(), (**b).clone());
+                    }
+                }
+            }
+            n = res.len()
+        }
+    }
+    conclusion(&res, start_time, end_time, settings);
+    println!("{} results found", n);
+
+    let file = if let Some(file) = &settings.graph_file {
+        parent.join(file)
+    } else if let Some(last_import) = &settings.last_import {
+        if let Some(txt) = json_str(last_import[7..].trim()) {
+            parent.join(txt + ".dot")
+        } else {
+            return
+        }
+    } else {
+        parent.join("tmp.dot")
+    };
+    println!("Exporting to `{}`", file.clone().into_os_string().into_string().unwrap());
+
+    let layout: &str = settings.graph_layout.as_ref().map(|s| &**s).unwrap_or("neato");
+    let node_color = "#ffffffa0";
+    let edge_color = "black";
+    let mut s = String::new();
+    writeln!(&mut s, "digraph G {{").unwrap();
+    writeln!(&mut s, "  layout={}; edge[penwidth=1,color=\"{}\"]", layout, edge_color).unwrap();
+    writeln!(&mut s, "  node[regular=true,style=filled,fillcolor=\"{}\"]", node_color).unwrap();
+    match res {
+        Ok(ref res) | Err(ref res) => {
+            for e in res {
+                if let Expr::Rel(a, b) = e {
+                    if roles.contains_key(b) {
+                        writeln!(&mut s, "  \"{}\" -> \"{}\"[label=\"{}\"];", a, b,
+                                 roles.get(b).unwrap()).unwrap();
+                    } else {
+                        writeln!(&mut s, "  \"{}\" -> \"{}\";", a, b).unwrap();
+                    }
+                }
+            }
+        }
+    }
+    writeln!(&mut s, "}}").unwrap();
+
+    match File::create(file) {
+        Ok(mut f) => {
+            use std::io::Write;
+            if write!(&mut f, "{}", s).is_err() {
+                println!("ERROR:\nWhen exporting graph to file");
+            }
+        }
+        Err(_) => {
+            println!("ERROR:\nCould not create file");
+            return;
+        }
+    };
 }
 
 fn search_pat(pat: &[Expr], facts: &[Expr], settings: &ProveSettings) {

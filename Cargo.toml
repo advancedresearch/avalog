@@ -16,3 +16,6 @@ exclude = ["source/*"]
 [dependencies]
 monotonic_solver = "0.4.0"
 piston_meta = "1.0.0"
+
+[dev-dependencies]
+read_token = "1.0.0"

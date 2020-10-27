@@ -14,6 +14,9 @@ Special commands:
 - clear               clears all facts and rules
 - maxsize <number>    proof search uses maximum number of facts and rules
 - no maxsize          proof search uses unlimited number of facts and rules
+- graph               exports expanded pairs and roles to GraphViz format
+- graphf "<file>"     set GraphViz file name
+- no graphf           use ".dot" after last imported Avalog file or "tmp.dot"
 - echo <expr>         prints out debug format of expression
 - help hide           more help about hiding and showing facts and rules
 - help pairs          more help about pairs
