@@ -1,0 +1,17 @@
+=== GraphViz Export ===
+Avalog supports exporting to the GraphViz format for visualization.
+
+  graph               expands all facts and exports data
+  graphf "<file>"     sets output file
+  no graphf           uses ".dot" after last imported file,
+                      or "tmp.dot" if there is no imported file
+  graphl "<layout>"   sets layout GraphViz algorithm
+
+List of layout algorithm:
+
+  dot         hierarchial directed graphs
+  neato       spring model using energy
+  fdp         spring model using forces
+  sfdp        multiscale fdp
+  twopi       concentric circles
+  circo       circo
