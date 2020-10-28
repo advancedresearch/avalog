@@ -288,7 +288,7 @@ fn export_graph(facts: &[Expr], settings: &ProveSettings, parent: &PathBuf) {
     let mut s = String::new();
     writeln!(&mut s, "digraph G {{").unwrap();
     writeln!(&mut s, "  layout={}; edge[penwidth=1,color=\"{}\"]", layout, edge_color).unwrap();
-    writeln!(&mut s, "  node[regular=true,style=filled,fillcolor=\"{}\"]", node_color).unwrap();
+    writeln!(&mut s, "  node[regular=false,style=filled,fillcolor=\"{}\"]", node_color).unwrap();
     for e in &res {
         if let Expr::Rel(a, b) = e {
             if roles.contains_key(b) {
