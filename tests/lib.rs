@@ -80,3 +80,8 @@ fn convert_unique_has_into_eq() {
 fn convert_eq_into_has() {
     check("source/convert_eq_into_has.txt", "source/convert_eq_into_has-0.txt");
 }
+
+#[test]
+fn copy() {
+    check("source/copy.txt", "source/copy-0.txt");
+}
