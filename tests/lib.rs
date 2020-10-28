@@ -16,6 +16,22 @@ fn check(facts: &'static str, goals: &'static str) {
     ).1.is_ok());
 }
 
+fn fail(facts: &'static str, goals: &'static str) {
+    use avalog::{solve_with_accelerator, parse, infer, Accelerator};
+
+    let facts = parse(facts).unwrap();
+    let goals = parse(goals).unwrap();
+    assert!(solve_with_accelerator(
+        &facts,
+        &goals,
+        None,
+        &[],
+        &[],
+        infer,
+        &mut Accelerator::new()
+    ).1.is_err());
+}
+
 #[test]
 fn capital() {
     check("source/capital.txt", "source/capital-0.txt");
@@ -47,4 +63,15 @@ fn squares() {
     check("source/squares2.txt", "source/squares2-0.txt");
     check("source/squares3.txt", "source/squares3-0.txt");
     check("source/squares4.txt", "source/squares4-0.txt");
+}
+
+#[test]
+fn convert_unique_has_into_eq() {
+    check("source/convert_has_into_eq.txt", "source/convert_has_into_eq-0.txt");
+    fail("source/convert_has_into_eq2.txt", "source/convert_has_into_eq2-0.txt");
+    check("source/convert_has_into_eq3.txt", "source/convert_has_into_eq3-0.txt");
+    check("source/convert_has_into_eq4.txt", "source/convert_has_into_eq4-0.txt");
+    check("source/convert_has_into_eq5.txt", "source/convert_has_into_eq5-0.txt");
+    fail("source/convert_has_into_eq6.txt", "source/convert_has_into_eq6-0.txt");
+    check("source/convert_has_into_eq6.txt", "source/convert_has_into_eq6-1.txt");
 }

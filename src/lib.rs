@@ -672,6 +672,10 @@ fn apply(e: &Expr, facts: &[Expr]) -> Option<Expr> {
             let new_b = apply(b, facts)?;
             return Some(eq((**a).clone(), new_b))
         }
+        Has(a, b) => {
+            let new_b = apply(b, facts)?;
+            return Some(has((**a).clone(), new_b))
+        }
         Inner(a) => {
             let new_a = apply(a, facts);
             if new_a.is_some() {return new_a.map(|n| inner(n))};
