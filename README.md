@@ -1,6 +1,6 @@
 # Avalog
 
-An experimental implementation of Avatar Logic
+An experimental implementation of [Avatar Logic](https://advancedresearch.github.io/avatar-extensions/summary.html)
 with a Prolog-like syntax.
 
 ```text
