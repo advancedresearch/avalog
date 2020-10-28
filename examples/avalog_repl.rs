@@ -97,6 +97,7 @@ fn main() {
             "help eval" => {print_help_eval(); continue}
             "help equality" => {print_help_equality(); continue}
             "help inequality" => {print_help_inequality(); continue}
+            "help list" => {print_help_list(); continue}
             "help graph" => {print_help_graph(); continue}
             x => {
                 if x.starts_with("?") {
@@ -419,4 +420,5 @@ fn print_help_application() {print!("{}", include_str!("../assets/help-applicati
 fn print_help_eval() {print!("{}", include_str!("../assets/help-eval.txt"))}
 fn print_help_equality() {print!("{}", include_str!("../assets/help-equality.txt"))}
 fn print_help_inequality() {print!("{}", include_str!("../assets/help-inequality.txt"))}
+fn print_help_list() {print!("{}", include_str!("../assets/help-list.txt"))}
 fn print_help_graph() {println!("{}", include_str!("../assets/help-graph.txt"))}

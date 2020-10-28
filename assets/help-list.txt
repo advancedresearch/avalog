@@ -1,0 +1,19 @@
+=== List ===
+Avalog supports variable number of arguments,
+which can be used to represent lists.
+
+For example:
+
+  (do, copy(A)) :- (do, copy(A, ..)).
+  (do, copy(B)) :- (do, copy(A, ..B)).
+  (do, copy(a, b, c, d))
+
+The pattern `..` ignores the tail.
+The pattern `..B` puts the tail in a new list.
+
+This generates the following pairs:
+
+  (do, copy(a))
+  (do, copy(b))
+  (do, copy(c))
+  (do, copy(d))
