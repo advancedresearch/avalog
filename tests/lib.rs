@@ -12,7 +12,7 @@ fn check(facts: &'static str, goals: &'static str) {
         &[],
         &[],
         infer,
-    ).is_ok());
+    ).1.is_ok());
 }
 
 #[test]

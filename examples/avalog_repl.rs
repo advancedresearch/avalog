@@ -210,38 +210,19 @@ pub struct ProveSettings {
     pub graph_layout: Option<String>,
 }
 
-pub enum ProveMode {
-    Prove,
-    Search,
-    GraphExport,
-}
-
-impl ProveMode {
-    pub fn ignore_proof_size_for_limit(&self) -> bool {
-        use ProveMode::*;
-        match self {
-            Search |
-            GraphExport => true,
-            Prove => false,
-        }
-    }
-}
-
 fn conclusion(
-    mode: ProveMode,
-    res: &Result<Vec<Expr>, Vec<Expr>>,
+    status: Result<(), Error>,
     start_time: SystemTime,
     end_time: SystemTime,
     settings: &ProveSettings,
 ) {
     println!("");
-    if res.is_ok() {
+    if status.is_ok() {
         println!("OK");
     } else {
         println!("ERROR");
         if let Some(m) = settings.max_size {
-            let n = match res {Ok(x) | Err(x) => x.len()};
-            if n >= m || mode.ignore_proof_size_for_limit() {
+            if let Err(Error::MaxSize) = status {
                 println!("Maximum limit reached.");
                 println!("Use `maxsize <number>` or `no maxsize` to set limit.");
                 println!("Current maximum number of facts and rules: {}", m);
@@ -260,7 +241,7 @@ fn export_graph(facts: &[Expr], settings: &ProveSettings, parent: &PathBuf) {
     use std::fs::File;
 
     let start_time = SystemTime::now();
-    let res = search(
+    let (res, status) = search(
         &facts,
         |e| if let Expr::Rel(_, _) = e {Some(e.clone())}
             else if let Expr::RoleOf(_, _) = e {Some(e.clone())}
@@ -271,25 +252,20 @@ fn export_graph(facts: &[Expr], settings: &ProveSettings, parent: &PathBuf) {
         infer
     );
     let end_time = SystemTime::now();
-    let n: usize;
+    let n: usize = res.len();
     let mut nodes: HashSet<Expr> = HashSet::new();
     let mut roles: HashMap<Expr, Expr> = HashMap::new();
-    match res {
-        Ok(ref res) | Err(ref res) => {
-            for e in res {
-                if let Expr::Rel(a, b) = e {
-                    if !nodes.contains(a) {nodes.insert((**a).clone());}
-                    if !nodes.contains(b) {nodes.insert((**b).clone());}
-                } else if let Expr::RoleOf(a, b) = e {
-                    if !roles.contains_key(a) {
-                        roles.insert((**a).clone(), (**b).clone());
-                    }
-                }
+    for e in &res {
+        if let Expr::Rel(a, b) = e {
+            if !nodes.contains(a) {nodes.insert((**a).clone());}
+            if !nodes.contains(b) {nodes.insert((**b).clone());}
+        } else if let Expr::RoleOf(a, b) = e {
+            if !roles.contains_key(a) {
+                roles.insert((**a).clone(), (**b).clone());
             }
-            n = res.len()
         }
     }
-    conclusion(ProveMode::GraphExport, &res, start_time, end_time, settings);
+    conclusion(status, start_time, end_time, settings);
     println!("{} results found", n);
 
     let file = if let Some(file) = &settings.graph_file {
@@ -312,17 +288,13 @@ fn export_graph(facts: &[Expr], settings: &ProveSettings, parent: &PathBuf) {
     writeln!(&mut s, "digraph G {{").unwrap();
     writeln!(&mut s, "  layout={}; edge[penwidth=1,color=\"{}\"]", layout, edge_color).unwrap();
     writeln!(&mut s, "  node[regular=true,style=filled,fillcolor=\"{}\"]", node_color).unwrap();
-    match res {
-        Ok(ref res) | Err(ref res) => {
-            for e in res {
-                if let Expr::Rel(a, b) = e {
-                    if roles.contains_key(b) {
-                        writeln!(&mut s, "  \"{}\" -> \"{}\"[label=\"{}\"];", a, b,
-                                 roles.get(b).unwrap()).unwrap();
-                    } else {
-                        writeln!(&mut s, "  \"{}\" -> \"{}\";", a, b).unwrap();
-                    }
-                }
+    for e in &res {
+        if let Expr::Rel(a, b) = e {
+            if roles.contains_key(b) {
+                writeln!(&mut s, "  \"{}\" -> \"{}\"[label=\"{}\"];", a, b,
+                         roles.get(b).unwrap()).unwrap();
+            } else {
+                writeln!(&mut s, "  \"{}\" -> \"{}\";", a, b).unwrap();
             }
         }
     }
@@ -347,7 +319,7 @@ fn search_pat(pat: &[Expr], facts: &[Expr], settings: &ProveSettings) {
 
     let pat = &pat[0];
     let start_time = SystemTime::now();
-    let res = search(
+    let (res, status) = search(
         &facts,
         |e| {
             let mut vs = vec![];
@@ -364,23 +336,18 @@ fn search_pat(pat: &[Expr], facts: &[Expr], settings: &ProveSettings) {
         infer
     );
     let end_time = SystemTime::now();
-    let n: usize;
-    match res {
-        Ok(ref res) | Err(ref res) => {
-            for r in res {
-                println!("{}", r);
-            }
-            n = res.len();
-        }
+    let n: usize = res.len();
+    for r in res {
+        println!("{}", r);
     }
-    conclusion(ProveMode::Search, &res, start_time, end_time, settings);
+    conclusion(status, start_time, end_time, settings);
     println!("{} results found", n);
 }
 
 fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
     let start_time = SystemTime::now();
     let f = if settings.reduce {solve_and_reduce} else {solve};
-    let res = f(
+    let (res, status) = f(
         &facts,
         &goals,
         settings.max_size,
@@ -391,44 +358,40 @@ fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
     let end_time = SystemTime::now();
     let mut count_hidden_facts = 0;
     let mut count_hidden_rules = 0;
-    match res {
-        Ok(ref res) | Err(ref res) => {
-            let mut in_start = true;
-            for r in res {
-                if in_start {
-                    let mut found = false;
-                    for q in facts {
-                        if q == r {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if !found {
-                        in_start = false;
-                        if count_hidden_facts > 0 {
-                            println!("<---oo-o--< {} hidden facts >--o-oo--->", count_hidden_facts);
-                        }
-                        if count_hidden_rules > 0 {
-                            println!("<---oo-o--< {} hidden rules >--o-oo--->", count_hidden_rules);
-                        }
-                        print!("----------------------------------------");
-                        println!("----------------------------------------");
-                    }
-                }
-                let rule = if let Expr::Rule(_, _) = r {true} else {false};
-                let hide = in_start && (!rule && settings.hide_facts ||
-                    rule && settings.hide_rules);
-                if !hide {
-                    println!("{}", r);
-                } else {
-                    if !rule {count_hidden_facts += 1};
-                    if rule {count_hidden_rules += 1};
+    let mut in_start = true;
+    for r in &res {
+        if in_start {
+            let mut found = false;
+            for q in facts {
+                if q == r {
+                    found = true;
+                    break;
                 }
             }
+            if !found {
+                in_start = false;
+                if count_hidden_facts > 0 {
+                    println!("<---oo-o--< {} hidden facts >--o-oo--->", count_hidden_facts);
+                }
+                if count_hidden_rules > 0 {
+                    println!("<---oo-o--< {} hidden rules >--o-oo--->", count_hidden_rules);
+                }
+                print!("----------------------------------------");
+                println!("----------------------------------------");
+            }
+        }
+        let rule = if let Expr::Rule(_, _) = r {true} else {false};
+        let hide = in_start && (!rule && settings.hide_facts ||
+            rule && settings.hide_rules);
+        if !hide {
+            println!("{}", r);
+        } else {
+            if !rule {count_hidden_facts += 1};
+            if rule {count_hidden_rules += 1};
         }
     }
 
-    conclusion(ProveMode::Prove, &res, start_time, end_time, settings);
+    conclusion(status, start_time, end_time, settings);
 }
 
 fn print_help() {print!("{}", include_str!("../assets/help.txt"))}
