@@ -389,8 +389,10 @@ impl Expr {
             Ambiguity(_) => self.clone(),
             Tail => self.clone(),
             TailSym(_) => self.clone(),
+            RoleOf(a, b) => {
+                role_of(a.eval_lift(eval, true), b.eval_lift(eval, true))
+            }
             // TODO: Handle these cases.
-            RoleOf(_, _) => self.clone(),
             Ava(_, _) => self.clone(),
             Inner(_) => self.clone(),
             Eq(_, _) => self.clone(),

@@ -85,3 +85,8 @@ fn convert_eq_into_has() {
 fn copy() {
     check("source/copy.txt", "source/copy-0.txt");
 }
+
+#[test]
+fn role_lift() {
+    check("source/role_lift_app.txt", "source/role_lift_app-0.txt");
+}
