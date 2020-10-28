@@ -29,7 +29,7 @@ amb :- (X, Y), (X, env), (Y, env).
 (X, Y) :- (X, agent), (Y, env), (X, prod), (Y, prod).
 
 // Generate the negative agent for destructive environments.
-(not'(X), Y) :- (X, agent), (Y, env), (Y, destr).
+(not'(X), Y) :- (X, agent), (Y, env), (Y, destr), X != not'(Z).
 
 u : umbrella
 n : no_umbrella
