@@ -27,6 +27,7 @@ Special commands:
 - help eval           more help about evaluation
 - help equality       more help about equality
 - help inequality     more help about inequality
+- help list           more help about lists
 - help graph          more help about GraphViz export
 
 Type in an expression in avatar logic, e.g. `(a, q'(b))`
