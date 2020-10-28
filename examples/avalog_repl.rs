@@ -210,7 +210,25 @@ pub struct ProveSettings {
     pub graph_layout: Option<String>,
 }
 
+pub enum ProveMode {
+    Prove,
+    Search,
+    GraphExport,
+}
+
+impl ProveMode {
+    pub fn ignore_proof_size_for_limit(&self) -> bool {
+        use ProveMode::*;
+        match self {
+            Search |
+            GraphExport => true,
+            Prove => false,
+        }
+    }
+}
+
 fn conclusion(
+    mode: ProveMode,
     res: &Result<Vec<Expr>, Vec<Expr>>,
     start_time: SystemTime,
     end_time: SystemTime,
@@ -223,7 +241,7 @@ fn conclusion(
         println!("ERROR");
         if let Some(m) = settings.max_size {
             let n = match res {Ok(x) | Err(x) => x.len()};
-            if n >= m {
+            if n >= m || mode.ignore_proof_size_for_limit() {
                 println!("Maximum limit reached.");
                 println!("Use `maxsize <number>` or `no maxsize` to set limit.");
                 println!("Current maximum number of facts and rules: {}", m);
@@ -271,7 +289,7 @@ fn export_graph(facts: &[Expr], settings: &ProveSettings, parent: &PathBuf) {
             n = res.len()
         }
     }
-    conclusion(&res, start_time, end_time, settings);
+    conclusion(ProveMode::GraphExport, &res, start_time, end_time, settings);
     println!("{} results found", n);
 
     let file = if let Some(file) = &settings.graph_file {
@@ -355,7 +373,7 @@ fn search_pat(pat: &[Expr], facts: &[Expr], settings: &ProveSettings) {
             n = res.len();
         }
     }
-    conclusion(&res, start_time, end_time, settings);
+    conclusion(ProveMode::Search, &res, start_time, end_time, settings);
     println!("{} results found", n);
 }
 
@@ -410,7 +428,7 @@ fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
         }
     }
 
-    conclusion(&res, start_time, end_time, settings);
+    conclusion(ProveMode::Prove, &res, start_time, end_time, settings);
 }
 
 fn print_help() {print!("{}", include_str!("../assets/help.txt"))}
