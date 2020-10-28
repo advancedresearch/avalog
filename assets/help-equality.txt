@@ -20,3 +20,5 @@ what the capital is of the country, it is convenient to lift the equality:
 
 When a "has" relation `p(a) => q'(b)` where `uniq q`,
 it is lifted to `p(a) = q'(b)` automatically.
+
+Equalities are lifted into "has" relations automatically.

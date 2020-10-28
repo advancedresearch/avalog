@@ -1,0 +1,26 @@
+=== Evaluation ===
+Avalog supports injection of evaluation role into expressions
+for easier evaluation in advanced modeling.
+
+For example:
+
+  x : val
+  (f(x), x)
+  eval val
+  (f(f(x)), x)
+
+The directive `eval val` expands `(f(f(x)), x)` into:
+
+  (f(val(f(x))), x)
+
+Here, `val` is the role used for evaluation.
+Notice that the role is not injected for top expressions.
+
+Similarly `(f(f(f(x))), x)` would be expanded to:
+
+  (f(val(f(val(f(x))))), x)
+
+The directive `no eval` turns off injection of evaluation role.
+
+The reason roles are injected like this,
+is because Avatar Logic can have multiple dimensions of evaluation.

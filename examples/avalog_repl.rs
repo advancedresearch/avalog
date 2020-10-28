@@ -92,8 +92,9 @@ fn main() {
             "help pairs" => {print_help_pairs(); continue}
             "help roles" => {print_help_roles(); continue}
             "help avatars" => {print_help_avatars(); continue}
-            "help application" => {print_help_application(); continue}
             "help rules" => {print_help_rules(); continue}
+            "help application" => {print_help_application(); continue}
+            "help eval" => {print_help_eval(); continue}
             "help equality" => {print_help_equality(); continue}
             "help inequality" => {print_help_inequality(); continue}
             "help graph" => {print_help_graph(); continue}
@@ -413,8 +414,9 @@ fn print_help_hide() {print!("{}", include_str!("../assets/help-hide.txt"))}
 fn print_help_pairs() {print!("{}", include_str!("../assets/help-pairs.txt"))}
 fn print_help_roles() {print!("{}", include_str!("../assets/help-roles.txt"))}
 fn print_help_avatars() {print!("{}", include_str!("../assets/help-avatars.txt"))}
-fn print_help_application() {print!("{}", include_str!("../assets/help-application.txt"))}
 fn print_help_rules() {print!("{}", include_str!("../assets/help-rules.txt"))}
+fn print_help_application() {print!("{}", include_str!("../assets/help-application.txt"))}
+fn print_help_eval() {print!("{}", include_str!("../assets/help-eval.txt"))}
 fn print_help_equality() {print!("{}", include_str!("../assets/help-equality.txt"))}
 fn print_help_inequality() {print!("{}", include_str!("../assets/help-inequality.txt"))}
 fn print_help_graph() {println!("{}", include_str!("../assets/help-graph.txt"))}
