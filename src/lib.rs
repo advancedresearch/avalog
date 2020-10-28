@@ -782,6 +782,12 @@ pub fn infer(solver: Solver<Expr, Accelerator>, facts: &[Expr]) -> Option<Expr> 
             }
         }
 
+        // Convert 'eq' into 'has'.
+        if let Eq(a, b) = e {
+            let new_expr = has((**a).clone(), (**b).clone());
+            if solver.can_add(&new_expr) {return Some(new_expr)};
+        }
+
         if let Rel(a, b) = e {
             if let Ava(av, _) = &**b {
                 // Avatar Binary Relation.

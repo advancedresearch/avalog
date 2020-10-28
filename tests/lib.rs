@@ -75,3 +75,8 @@ fn convert_unique_has_into_eq() {
     fail("source/convert_has_into_eq6.txt", "source/convert_has_into_eq6-0.txt");
     check("source/convert_has_into_eq6.txt", "source/convert_has_into_eq6-1.txt");
 }
+
+#[test]
+fn convert_eq_into_has() {
+    check("source/convert_eq_into_has.txt", "source/convert_eq_into_has-0.txt");
+}
