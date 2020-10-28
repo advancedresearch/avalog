@@ -1,0 +1,5 @@
+(a, b)
+b : val
+
+eval val
+f(f(a)) : p
