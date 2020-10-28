@@ -150,7 +150,6 @@
 //!
 //! The inference rules are coded in the `infer` function.
 
-use std::collections::HashSet;
 use std::sync::Arc;
 use std::fmt;
 
@@ -691,13 +690,8 @@ fn apply(e: &Expr, facts: &[Expr]) -> Option<Expr> {
 }
 
 /// Specifies inference rules for monotonic solver.
-pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]) -> Option<Expr> {
+pub fn infer(solver: Solver<Expr>, facts: &[Expr]) -> Option<Expr> {
     use std::collections::HashMap;
-
-    let can_add = |new_expr: &Expr| {
-        !cache.contains(new_expr) &&
-        !filter_cache.contains(new_expr)
-    };
 
     // Build an index to improve worst-case performance.
     let mut index: HashMap<Expr, Vec<usize>> = HashMap::new();
@@ -730,10 +724,10 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                 if let RoleOf(a2, b2) = e2 {
                     if a2 == a && b2 != b {
                         let new_expr = ambiguous_role((**a).clone(), (**b).clone(), (**b2).clone());
-                        if can_add(&new_expr) {return Some(new_expr)};
+                        if solver.can_add(&new_expr) {return Some(new_expr)};
 
                         let new_expr = Ambiguity(true);
-                        if can_add(&new_expr) {return Some(new_expr)};
+                        if solver.can_add(&new_expr) {return Some(new_expr)};
                     }
                 }
             }
@@ -744,14 +738,14 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
             if let Ava(b1, _) = &**b {
                 // `p(a) => q'(b), uniq q   =>   p(a) = q'(b)`
                 let uniq_expr = uniq_ava((**b1).clone());
-                if cache.contains(&uniq_expr) {
+                if solver.cache.contains(&uniq_expr) {
                     let new_expr = eq((**a).clone(), (**b).clone());
-                    if can_add(&new_expr) {return Some(new_expr)};
+                    if solver.can_add(&new_expr) {return Some(new_expr)};
                 }
             } else {
                 // `p(a) => b   =>   p(a) = b`
                 let new_expr = eq((**a).clone(), (**b).clone());
-                if can_add(&new_expr) {return Some(new_expr)};
+                if solver.can_add(&new_expr) {return Some(new_expr)};
             }
         }
 
@@ -763,14 +757,14 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                 for e2 in find(b) {
                     if let RoleOf(b2, r) = e2 {
                         if b2 == b {
-                            if cache.contains(&uniq_ava((**av).clone())) {
+                            if solver.cache.contains(&uniq_ava((**av).clone())) {
                                 uniq = true;
                                 let new_expr = eq(app((**r).clone(), (**a).clone()), (**b).clone());
-                                if can_add(&new_expr) {return Some(new_expr)};
+                                if solver.can_add(&new_expr) {return Some(new_expr)};
                             }
 
                             let new_expr = has(app((**r).clone(), (**a).clone()), (**b).clone());
-                            if can_add(&new_expr) {return Some(new_expr)};
+                            if solver.can_add(&new_expr) {return Some(new_expr)};
                             b_role = Some((**r).clone());
                         }
                     }
@@ -788,10 +782,14 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                                                 if a3 == b2 && &**b3 == b_role {
                                                     let new_expr = ambiguous_rel((**a).clone(),
                                                         (**b).clone(), (**b2).clone());
-                                                    if can_add(&new_expr) {return Some(new_expr)};
+                                                    if solver.can_add(&new_expr) {
+                                                        return Some(new_expr)
+                                                    }
 
                                                     let new_expr = Ambiguity(true);
-                                                    if can_add(&new_expr) {return Some(new_expr)};
+                                                    if solver.can_add(&new_expr) {
+                                                        return Some(new_expr)
+                                                    }
                                                 }
                                             }
                                         }
@@ -808,9 +806,9 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                     if let RoleOf(b2, r) = e2 {
                         if b2 == b {
                             let new_expr = eq(app((**r).clone(), (**a).clone()), (**b).clone());
-                            if can_add(&new_expr) {return Some(new_expr)};
+                            if solver.can_add(&new_expr) {return Some(new_expr)};
                             let new_expr = has(app((**r).clone(), (**a).clone()), (**b).clone());
-                            if can_add(&new_expr) {return Some(new_expr)};
+                            if solver.can_add(&new_expr) {return Some(new_expr)};
                             b_role = Some((**r).clone());
                         }
                     }
@@ -821,13 +819,13 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                     for e1 in find(a) {
                         if let Rel(a2, b2) = e1 {
                             if a2 == a && b2 != b {
-                                if cache.contains(&role_of((**b2).clone(), b_role.clone())) {
+                                if solver.cache.contains(&role_of((**b2).clone(), b_role.clone())) {
                                     let new_expr = ambiguous_rel((**a).clone(),
                                         (**b).clone(), (**b2).clone());
-                                    if can_add(&new_expr) {return Some(new_expr)};
+                                    if solver.can_add(&new_expr) {return Some(new_expr)};
 
                                     let new_expr = Ambiguity(true);
-                                    if can_add(&new_expr) {return Some(new_expr)};
+                                    if solver.can_add(&new_expr) {return Some(new_expr)};
                                 }
                             }
                         }
@@ -839,7 +837,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
 
     for e in facts {
         if let Some(new_expr) = apply(e, facts) {
-            if can_add(&new_expr) {return Some(new_expr)};
+            if solver.can_add(&new_expr) {return Some(new_expr)};
         }
     }
 
@@ -851,7 +849,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
         for (i, e) in facts.iter().enumerate().rev() {
             if let Rule(_, _) = e {
                 if let Some(new_expr) = match_rule(e, e2) {
-                    if !can_add(&new_expr) {
+                    if !solver.can_add(&new_expr) {
                         last_rule = Some((i, j));
                         break 'outer;
                     }
@@ -867,7 +865,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                 if let Rule(_, _) = e {
                     for e2 in facts {
                         if let Some(new_expr) = match_rule(e, e2) {
-                            if can_add(&new_expr) {return Some(new_expr)};
+                            if solver.can_add(&new_expr) {return Some(new_expr)};
                         }
                     }
                 }
@@ -880,7 +878,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                 if let Rule(_, _) = e {
                     for e2 in facts {
                         if let Some(new_expr) = match_rule(e, e2) {
-                            if can_add(&new_expr) {return Some(new_expr)};
+                            if solver.can_add(&new_expr) {return Some(new_expr)};
                         }
                     }
                 }
@@ -890,7 +888,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
                 if let Rule(_, _) = e {
                     for e2 in facts {
                         if let Some(new_expr) = match_rule(e, e2) {
-                            if can_add(&new_expr) {return Some(new_expr)};
+                            if solver.can_add(&new_expr) {return Some(new_expr)};
                         }
                     }
                 }
@@ -898,7 +896,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
         }
     }
 
-    if !cache.contains(&Ambiguity(true)) {
+    if !solver.cache.contains(&Ambiguity(true)) {
         let mut amb = false;
         for e in facts {
             if let AmbiguousRel(_, _, _) = e {
@@ -910,7 +908,7 @@ pub fn infer(cache: &HashSet<Expr>, filter_cache: &HashSet<Expr>, facts: &[Expr]
             }
         }
         let new_expr = Ambiguity(amb);
-        if can_add(&new_expr) {return Some(new_expr)};
+        if solver.can_add(&new_expr) {return Some(new_expr)};
     }
     None
 }
