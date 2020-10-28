@@ -1,0 +1,2 @@
+// This should succeed, because `.q1` was used.
+p(a) = q2'(b)
