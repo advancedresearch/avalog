@@ -241,7 +241,7 @@ fn export_graph(facts: &[Expr], settings: &ProveSettings, parent: &PathBuf) {
     use std::fs::File;
 
     let start_time = SystemTime::now();
-    let (res, status) = search(
+    let (res, status) = search_with_accelerator(
         &facts,
         |e| if let Expr::Rel(_, _) = e {Some(e.clone())}
             else if let Expr::RoleOf(_, _) = e {Some(e.clone())}
@@ -249,7 +249,8 @@ fn export_graph(facts: &[Expr], settings: &ProveSettings, parent: &PathBuf) {
         settings.max_size,
         &[],
         &[],
-        infer
+        infer,
+        &mut Accelerator::new()
     );
     let end_time = SystemTime::now();
     let n: usize = res.len();
@@ -319,7 +320,7 @@ fn search_pat(pat: &[Expr], facts: &[Expr], settings: &ProveSettings) {
 
     let pat = &pat[0];
     let start_time = SystemTime::now();
-    let (res, status) = search(
+    let (res, status) = search_with_accelerator(
         &facts,
         |e| {
             let mut vs = vec![];
@@ -333,7 +334,8 @@ fn search_pat(pat: &[Expr], facts: &[Expr], settings: &ProveSettings) {
         settings.max_size,
         &[],
         &[],
-        infer
+        infer,
+        &mut Accelerator::new()
     );
     let end_time = SystemTime::now();
     let n: usize = res.len();
@@ -346,15 +348,27 @@ fn search_pat(pat: &[Expr], facts: &[Expr], settings: &ProveSettings) {
 
 fn prove(goals: &[Expr], facts: &[Expr], settings: &ProveSettings) {
     let start_time = SystemTime::now();
-    let f = if settings.reduce {solve_and_reduce} else {solve};
-    let (res, status) = f(
-        &facts,
-        &goals,
-        settings.max_size,
-        &[],
-        &[],
-        infer,
-    );
+    let (res, status) = if settings.reduce {
+        solve_and_reduce_with_accelerator(
+            &facts,
+            &goals,
+            settings.max_size,
+            &[],
+            &[],
+            infer,
+            Accelerator::constructor(),
+        )
+    } else {
+        solve_with_accelerator(
+            &facts,
+            &goals,
+            settings.max_size,
+            &[],
+            &[],
+            infer,
+            &mut Accelerator::new(),
+        )
+    };
     let end_time = SystemTime::now();
     let mut count_hidden_facts = 0;
     let mut count_hidden_rules = 0;

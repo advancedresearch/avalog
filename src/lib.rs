@@ -152,6 +152,7 @@
 
 use std::sync::Arc;
 use std::fmt;
+use std::collections::HashMap;
 
 use Expr::*;
 
@@ -689,32 +690,60 @@ fn apply(e: &Expr, facts: &[Expr]) -> Option<Expr> {
     None
 }
 
-/// Specifies inference rules for monotonic solver.
-pub fn infer(solver: Solver<Expr>, facts: &[Expr]) -> Option<Expr> {
-    use std::collections::HashMap;
+/// Index of sub-expressions.
+pub struct Accelerator {
+    /// Index for each sub-expression.
+    pub index: HashMap<Expr, Vec<usize>>,
+    /// The number of facts that has been indexed.
+    pub len: usize,
+}
 
-    // Build an index to improve worst-case performance.
-    let mut index: HashMap<Expr, Vec<usize>> = HashMap::new();
-    let mut insert = |i: usize, e: &Expr| {
-        index.entry(e.clone()).or_insert(vec![]).push(i);
-    };
-    for (i, e) in facts.iter().enumerate() {
-        match e {
-            RoleOf(a, b) | Rel(a, b) | Ava(a, b) | Eq(a, b) |
-            Neq(a, b) | Has(a, b) | App(a, b) => {
-                insert(i, a);
-                insert(i, b);
+impl Accelerator {
+    /// Creates a new accelerator.
+    pub fn new() -> Accelerator {
+        Accelerator {index: HashMap::new(), len: 0}
+    }
+
+    /// Returns a constructor for solve-and-reduce.
+    pub fn constructor() -> fn(&[Expr], &[Expr]) -> Accelerator {
+        |_, _| Accelerator::new()
+    }
+
+    /// Updates the accelerator with list of facts.
+    pub fn update(&mut self, facts: &[Expr]) {
+        let accelerator_len = self.len;
+        let ref mut index = self.index;
+        let mut insert = |i: usize, e: &Expr| {
+            index.entry(e.clone()).or_insert(vec![]).push(i);
+        };
+        for (i, e) in facts[accelerator_len..].iter().enumerate() {
+            match e {
+                RoleOf(a, b) | Rel(a, b) | Ava(a, b) | Eq(a, b) |
+                Neq(a, b) | Has(a, b) | App(a, b) => {
+                    insert(i, a);
+                    insert(i, b);
+                    self.len += 1;
+                }
+                Sym(_) | Inner(_) | UniqAva(_) => {
+                    insert(i + accelerator_len, e);
+                    self.len += 1;
+                }
+                AmbiguousRel(_, _, _) |
+                AmbiguousRole(_, _, _) |
+                Rule(_, _) |
+                Ambiguity(_) |
+                Tail | TailSym(_) | List(_) => {}
             }
-            Sym(_) | Inner(_) | UniqAva(_) => insert(i, e),
-            AmbiguousRel(_, _, _) |
-            AmbiguousRole(_, _, _) |
-            Rule(_, _) |
-            Ambiguity(_) |
-            Tail | TailSym(_) | List(_) => {}
         }
     }
+}
+
+/// Specifies inference rules for monotonic solver.
+pub fn infer(solver: Solver<Expr, Accelerator>, facts: &[Expr]) -> Option<Expr> {
+    // Build an index to improve worst-case performance.
+    solver.accelerator.update(facts);
     let find = |e: &Expr| {
-        index.get(e).unwrap().iter().map(|&i| &facts[i])
+        solver.accelerator.index.get(e).unwrap().iter().map(|&i| &facts[i])
     };
 
     for e in facts.iter().rev() {
