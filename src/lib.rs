@@ -390,7 +390,7 @@ impl Expr {
             Tail => self.clone(),
             TailSym(_) => self.clone(),
             RoleOf(a, b) => {
-                role_of(a.eval_lift(eval, true), b.eval_lift(eval, true))
+                role_of(a.eval_lift(eval, false), b.eval_lift(eval, false))
             }
             Ava(a, b) => ava((**a).clone(), b.eval_lift(eval, false)),
             Inner(a) => inner(a.eval_lift(eval, false)),
