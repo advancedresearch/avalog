@@ -393,8 +393,8 @@ impl Expr {
                 role_of(a.eval_lift(eval, true), b.eval_lift(eval, true))
             }
             Ava(a, b) => ava((**a).clone(), b.eval_lift(eval, false)),
+            Inner(a) => inner(a.eval_lift(eval, false)),
             // TODO: Handle these cases.
-            Inner(_) => self.clone(),
             Eq(_, _) => self.clone(),
             Neq(_, _) => self.clone(),
             Has(_, _) => self.clone(),
