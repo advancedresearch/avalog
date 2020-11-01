@@ -394,8 +394,14 @@ impl Expr {
             }
             Ava(a, b) => ava((**a).clone(), b.eval_lift(eval, false)),
             Inner(a) => inner(a.eval_lift(eval, false)),
+            Eq(a, b) => {
+                if let App(a1, a2) = &**a {
+                    eq(app((**a1).clone(), a2.eval_lift(eval, true)), b.eval_lift(eval, false))
+                } else {
+                    self.clone()
+                }
+            }
             // TODO: Handle these cases.
-            Eq(_, _) => self.clone(),
             Neq(_, _) => self.clone(),
             Has(_, _) => self.clone(),
             AmbiguousRole(_, _, _) => self.clone(),

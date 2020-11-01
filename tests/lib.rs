@@ -91,4 +91,5 @@ fn role_lift() {
     check("source/role_lift_app.txt", "source/role_lift_app-0.txt");
     check("source/role_lift_ava.txt", "source/role_lift_ava-0.txt");
     check("source/role_lift_inner.txt", "source/role_lift_inner-0.txt");
+    check("source/role_lift_eq.txt", "source/role_lift_eq-0.txt");
 }

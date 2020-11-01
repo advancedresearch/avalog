@@ -1,0 +1,2 @@
+val(f(val(f(a)))) = b
+val(a) = val(g(val(g(b))))
