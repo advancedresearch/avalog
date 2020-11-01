@@ -1,0 +1,6 @@
+(a, b)
+b : val
+
+eval val
+val(f(f(a))) = b
+val(a) = g(g(b))
