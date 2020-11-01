@@ -3,3 +3,4 @@ b : val
 
 eval val
 f(f(a)) : p
+a : g(g(p))
