@@ -1,0 +1,79 @@
+// Closure Calculus
+// See paper: https://dl.acm.org/doi/pdf/10.1145/3294032.3294085
+
+j : term
+
+r(X) : term :- see'(r(X)) : goal, X : term.
+see'(X) : goal :- see'(r(X)) : goal.
+
+f(R, T) : term :- see'(f(R, T)) : goal, R : term, T : term.
+see'(R) : goal :- see'(f(R, T)) : goal.
+see'(T) : goal :- see'(f(R, T)) : goal.
+
+lam(S, T) : term :- see'(lam(S, T)) : goal, S : term, T : term.
+see'(S) : goal :- see'(lam(S, T)) : goal.
+see'(T) : goal :- see'(lam(S, T)) : goal.
+
+i : term
+
+// OK
+p(U, S) : term :- see'(p(U, S)) : goal, U : term, S : term.
+see'(U) : goal :- see'(p(U, S)) : goal.
+see'(S) : goal :- see'(p(U, S)) : goal.
+
+T(U) : term :- see'(T(U)) : goal, T : term, U : term.
+see'(T) : goal :- see'(T(U)) : goal.
+see'(U) : goal :- see'(T(U)) : goal.
+
+// J(t) => J’(t)
+f(j, T) : term :- see'(f(j, T)) : goal, T : term.
+(T, f(j, T)) :- T : term.
+
+// R(t)(u) => R(t)’(u)
+f(r(T), U) : term :- see'(f(r(T), U)) : goal, T : term, U : term.
+(app(r(T), U), f(r(T), U)) :- T : term, U : term.
+
+// r’(t)(u) => r’(t)’(u)
+f(f(R, T), U) : term :-
+  see'(f(f(R, T), U)) : goal,
+  R : term, T : term, U : term.
+(app(f(R, T), U), f(f(R, T), U)) :- R : term, T : term, U : term.
+
+// (\(J) ~ s = t)(u) => (u, s)(t)
+app(p(U, S), T) : term :-
+  see'(app(p(U, S), T)) : goal,
+  U : term, S : term, T : term.
+(app(lam(S, T), U), app(p(U, S), T)) :- U : term, S : term, T : term.
+
+// id(t) => t
+(i(T), T) :- T : term.
+
+// (u, s)(J) => u
+(app(p(U, S), j), U) :- U : term, S : term.
+
+// (u, s)(R(t)) => s(t)
+app(S, T) : term :- see'(app(S, T)) : goal, S : term, T : term.
+(app(p(U, S), r(T)), app(S, T)) :- U : term, S : term, T : term.
+
+// (u, s)(r’(t)) => (u, s)(r)((u, s)(t))
+app(app(p(U, S), R), app(p(U, S), T)) : term :-
+  see'(app(app(p(U, S), R), app(p(U, S), T))) : goal,
+  U : term, S : term, T : term, R : term.
+(app(p(U, S), f(R, T)), app(app(p(U, S), R), app(p(U, S), T))) :-
+  U : term, S : term, T : term, R : term.
+
+// (u, s)(\(J) ~ r = t) => \(J) ~ (u, s)(r) = t
+lam(app(p(U, S), R), T) : term :-
+  see'(lam(app(p(U, S), R), T)) : goal, U : term, S : term, R : term, T : term.
+(app(p(U, S), lam(R, T)), lam(app(p(U, S), R), T)) :-
+  U : term, S : term, R : term, T : term.
+
+// (u, s)(id) => id
+(app(p(U, S), i), i) :- U : term, S : term.
+
+// (u, s)((r, t)) => ((u, s)(r), (u, s)(t))
+p(app(p(U, S), R), app(p(U, S), T)) : term :-
+  see'(p(app(p(U, S), R), app(p(U, S), T))) : goal,
+  U : term, S : term, R : term, T : term.
+(app(p(U, S), p(R, T)), p(app(p(U, S), R), app(p(U, S), T))) :-
+  U : term, S : term, R : term, T : term.
