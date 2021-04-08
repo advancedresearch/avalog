@@ -23,7 +23,6 @@ see'(T) : goal :- see'(lam(S, T)) : goal.
 
 i : term
 
-// OK
 p(U, S) : term :- see'(p(U, S)) : goal, U : term, S : term.
 see'(U) : goal :- see'(p(U, S)) : goal.
 see'(S) : goal :- see'(p(U, S)) : goal.
