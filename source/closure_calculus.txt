@@ -1,5 +1,12 @@
 // Closure Calculus
 // See paper: https://dl.acm.org/doi/pdf/10.1145/3294032.3294085
+//
+// To check up to 3, you type (after putting this file in your working folder):
+//
+// > import "closure_calculus.txt"
+// > see'(r(r(r(j)))) : goal
+// > maxsize 4000
+// > provenr no amb
 
 j : term
 
