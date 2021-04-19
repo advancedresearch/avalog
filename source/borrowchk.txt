@@ -1,7 +1,7 @@
 // # Borrow Checker
 //
 // To use this file, save it in your working folder and type:
-// `import "borrowchk.txt"
+// `import "borrowchk.txt"`
 //
 // This formalises a borrow checker with allocation/deallocation on tree structures
 // with move and borrow semantics.
