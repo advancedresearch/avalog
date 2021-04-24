@@ -607,6 +607,7 @@ fn equal(a: &Expr, b: &Expr) -> Option<bool> {
     else {
         match (a, b) {
             (&Sym(_), &Sym(_)) |
+            (&App(_, _), &Sym(_)) |
             (&App(_, _), &Ava(_, _)) => None,
             (&Sym(_), &Ava(_, _)) |
             (&Ava(_, _), &Sym(_)) => Some(false),
