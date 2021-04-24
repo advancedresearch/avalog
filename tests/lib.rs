@@ -93,3 +93,8 @@ fn role_lift() {
     check("source/role_lift_inner.txt", "source/role_lift_inner-0.txt");
     check("source/role_lift_eq.txt", "source/role_lift_eq-0.txt");
 }
+
+#[test]
+fn amb_fail() {
+    fail("source/amb_fail.txt", "source/amb.txt");
+}

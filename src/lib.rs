@@ -489,7 +489,21 @@ pub fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>, tail: &mut Ve
         (&Sym(ref a1), &Sym(ref a2)) => {
             if let Some(c) = a1.chars().next() {
                 if c.is_uppercase() {
-                    vs.push((a1.clone(), a.clone()));
+                    // Look for previous occurences of bound variable.
+                    let mut found = false;
+                    for &(ref b, ref b_expr) in &*vs {
+                        if b == a1 {
+                            if let Some(true) = equal(b_expr, a) {
+                                found = true;
+                                break;
+                            } else {
+                                return false;
+                            }
+                        }
+                    }
+                    if !found {
+                        vs.push((a1.clone(), a.clone()));
+                    }
                     true
                 } else {
                     a1 == a2
