@@ -1,0 +1,18 @@
+//
+// This is an attempt model Avalog's inference rules
+// as a graph inside Avalog.
+//
+(start, fact_iter)
+(fact_iter, detect_ambiguous_role)
+(detect_ambiguous_role, emit_ambiguous_role)
+(detect_ambiguous_role, no_ambiguous_role_detected)
+emit_ambiguous_role : yes
+no_ambiguous_role_detected : no
+(emit_ambiguous_role, ambiguous_role)
+(ambiguous_role, ambiguous_role'(ambiguity))
+(ambiguous_role'(ambiguity), detect_convert_unique_has_into_eq)
+(no_ambiguous_role_detected, detect_convert_unique_has_into_eq)
+(detect_convert_unique_has_into_eq, has_one_avatar)
+has_one_avatar : yes
+(detect_convert_unique_has_into_eq, else)
+else : no
