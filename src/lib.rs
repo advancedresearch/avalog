@@ -744,16 +744,15 @@ impl Accelerator {
             index.entry(e.clone()).or_insert(vec![]).push(i);
         };
         for (i, e) in facts[accelerator_len..].iter().enumerate() {
+            let i = i + accelerator_len;
             match e {
                 RoleOf(a, b) | Rel(a, b) | Ava(a, b) | Eq(a, b) |
                 Neq(a, b) | Has(a, b) | App(a, b) => {
                     insert(i, a);
                     insert(i, b);
-                    self.len += 1;
                 }
                 Sym(_) | Inner(_) | UniqAva(_) => {
-                    insert(i + accelerator_len, e);
-                    self.len += 1;
+                    insert(i, e);
                 }
                 AmbiguousRel(_, _, _) |
                 AmbiguousRole(_, _, _) |
@@ -762,6 +761,7 @@ impl Accelerator {
                 Tail | TailSym(_) | List(_) => {}
             }
         }
+        self.len = facts.len();
     }
 }
 

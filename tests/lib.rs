@@ -98,3 +98,8 @@ fn role_lift() {
 fn amb_fail() {
     fail("source/amb_fail.txt", "source/amb.txt");
 }
+
+#[test]
+fn amb_success() {
+    check("source/amb_success.txt", "source/amb.txt");
+}
