@@ -1,0 +1,13 @@
+// This should prove ambiguity because
+// `person : table` and `address : table`
+// which gives `table(address_book) = person`
+// and `table(address_book) = address`.
+
+// Type hierarchy.
+Y : U :- X : T, (X, Y), (T, U).
+
+(schema, table)
+
+address_book : schema
+(address_book, person)
+(address_book, address)
