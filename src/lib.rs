@@ -456,7 +456,7 @@ pub fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>, tail: &mut Ve
             bind(a1, a2, vs, tail) &&
             bind(b1, b2, vs, tail)
         }
-        (&Has(ref a1, ref b1), &Eq(ref a2, ref b2)) => {
+        (&Has(ref a1, ref b1), &Has(ref a2, ref b2)) => {
             bind(a1, a2, vs, tail) &&
             bind(b1, b2, vs, tail)
         }
