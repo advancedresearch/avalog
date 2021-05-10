@@ -98,7 +98,7 @@ fn parse_app(
     }
 
     let f = f.ok_or(())?;
-    let mut expr = Expr::Sym(f);
+    let mut expr = f.into();
     for a in &arg {
         expr = app(expr, a.clone());
     }
@@ -137,7 +137,7 @@ fn parse_ava(
     let avatar = avatar.ok_or(())?;
     let core = core.ok_or(())?;
     Ok((convert.subtract(start), Expr::Ava(
-        Box::new(Expr::Sym(avatar)),
+        Box::new(avatar.into()),
         Box::new(core)
     )))
 }
@@ -170,7 +170,10 @@ fn parse_uniq(
     Ok((convert.subtract(start), arg))
 }
 
-fn parse_sym(
+/// Parses symbol or variable.
+///
+/// Converts to variable automatically when starting with upper case.
+fn parse_sym_or_var(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
@@ -186,7 +189,7 @@ fn parse_sym(
             break;
         } else if let Ok((range, v)) = convert.meta_string("val") {
             convert.update(range);
-            val = Some(Expr::Sym(v));
+            val = Some(v.into());
         } else {
             let range = convert.ignore();
             convert.update(range);
@@ -484,7 +487,7 @@ fn parse_expr(
         } else if let Ok((range, val)) = parse_rel("rel", convert, ignored) {
             convert.update(range);
             expr = Some(val);
-        } else if let Ok((range, val)) = parse_sym("sym", convert, ignored) {
+        } else if let Ok((range, val)) = parse_sym_or_var("sym", convert, ignored) {
             convert.update(range);
             expr = Some(val);
         } else if let Ok((range, val)) = parse_uniq("uniq", convert, ignored) {
