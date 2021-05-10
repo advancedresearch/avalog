@@ -280,8 +280,22 @@ impl fmt::Display for Expr {
     }
 }
 
+impl From<Arc<String>> for Expr {
+    fn from(val: Arc<String>) -> Expr {
+        if let Some(c) = val.chars().next() {
+            if c.is_uppercase() {return Var(val)};
+        }
+        Sym(val)
+    }
+}
+
 impl From<&'static str> for Expr {
-    fn from(val: &'static str) -> Expr {Sym(Arc::new(val.into()))}
+    fn from(val: &'static str) -> Expr {
+        if let Some(c) = val.chars().next() {
+            if c.is_uppercase() {return Var(Arc::new(val.into()))};
+        }
+        Sym(Arc::new(val.into()))
+    }
 }
 
 /// Constructs a unique directive expression, e.g. `uniq a`.
@@ -416,13 +430,8 @@ impl Expr {
     /// Returns `true` if expression contains no variables.
     pub fn is_const(&self) -> bool {
         match self {
-            Sym(ref a) => {
-                if let Some(c) = a.chars().next() {
-                    !c.is_uppercase()
-                } else {
-                    true
-                }
-            }
+            Var(_) => false,
+            Sym(_) => true,
             App(ref a, ref b) => a.is_const() && b.is_const(),
             Ava(ref a, ref b) => a.is_const() && b.is_const(),
             _ => false
@@ -488,43 +497,28 @@ pub fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>, tail: &mut Ve
             bind(a1, a2, vs, tail) &&
             bind(b1, b2, vs, tail)
         }
-        (&Sym(ref a1), &Sym(ref a2)) => {
-            if let Some(c) = a1.chars().next() {
-                if c.is_uppercase() {
-                    // Look for previous occurences of bound variable.
-                    let mut found = false;
-                    for &(ref b, ref b_expr) in &*vs {
-                        if b == a1 {
-                            if let Some(true) = equal(b_expr, a) {
-                                found = true;
-                                break;
-                            } else {
-                                return false;
-                            }
-                        }
+        (&Sym(ref a1), &Sym(ref a2)) => a1 == a2,
+        (&Var(ref a1), &Sym(_)) => {
+            // Look for previous occurences of bound variable.
+            let mut found = false;
+            for &(ref b, ref b_expr) in &*vs {
+                if b == a1 {
+                    if let Some(true) = equal(b_expr, a) {
+                        found = true;
+                        break;
+                    } else {
+                        return false;
                     }
-                    if !found {
-                        vs.push((a1.clone(), a.clone()));
-                    }
-                    true
-                } else {
-                    a1 == a2
                 }
-            } else {
-                false
             }
+            if !found {
+                vs.push((a1.clone(), a.clone()));
+            }
+            true
         }
-        (&Sym(ref a1), _) if a.is_const() => {
-            if let Some(c) = a1.chars().next() {
-                if c.is_uppercase() {
-                    vs.push((a1.clone(), a.clone()));
-                    true
-                } else {
-                    false
-                }
-            } else {
-                false
-            }
+        (&Var(ref a1), _) if a.is_const() => {
+            vs.push((a1.clone(), a.clone()));
+            true
         }
         (&Ava(ref a1, ref b1), &Ava(ref a2, ref b2)) => {
             bind(a1, a2, vs, tail) &&
@@ -539,18 +533,15 @@ fn substitute(r: &Expr, vs: &Vec<(Arc<String>, Expr)>) -> Expr {
         Rel(a1, b1) => {
             rel(substitute(a1, vs), substitute(b1, vs))
         }
-        Sym(a1) => {
-            if let Some(c) = a1.chars().next() {
-                if c.is_uppercase() {
-                    for v in vs {
-                        if &v.0 == a1 {
-                            return v.1.clone();
-                        }
-                    }
+        Var(a1) => {
+            for v in vs {
+                if &v.0 == a1 {
+                    return v.1.clone();
                 }
             }
             r.clone()
         }
+        Sym(_) => r.clone(),
         Ava(a1, b1) => {
             ava(substitute(a1, vs), substitute(b1, vs))
         }
@@ -568,19 +559,15 @@ fn substitute(r: &Expr, vs: &Vec<(Arc<String>, Expr)>) -> Expr {
         }
         App(a, b) => {
             let a_expr = substitute(a, vs);
-            if let Sym(a1) = &**b {
-                if let Some(c) = a1.chars().next() {
-                    if c.is_uppercase() {
-                        for v in vs {
-                            if &v.0 == a1 {
-                                if let List(args) = &v.1 {
-                                    let mut expr = a_expr;
-                                    for arg in args {
-                                        expr = app(expr, arg.clone());
-                                    }
-                                    return expr;
-                                }
+            if let Var(a1) = &**b {
+                for v in vs {
+                    if &v.0 == a1 {
+                        if let List(args) = &v.1 {
+                            let mut expr = a_expr;
+                            for arg in args {
+                                expr = app(expr, arg.clone());
                             }
+                            return expr;
                         }
                     }
                 }
@@ -609,10 +596,16 @@ fn equal(a: &Expr, b: &Expr) -> Option<bool> {
     else {
         match (a, b) {
             (&Sym(_), &Sym(_)) |
+            (&Sym(_), &Var(_)) |
+            (&Var(_), &Sym(_)) |
+            (&Var(_), &Var(_)) |
             (&App(_, _), &Sym(_)) |
+            (&App(_, _), &Var(_)) |
             (&App(_, _), &Ava(_, _)) => None,
             (&Sym(_), &Ava(_, _)) |
-            (&Ava(_, _), &Sym(_)) => Some(false),
+            (&Var(_), &Ava(_, _)) |
+            (&Ava(_, _), &Sym(_)) |
+            (&Ava(_, _), &Var(_)) => Some(false),
             (&Ava(ref a1, ref b1), &Ava(ref a2, ref b2)) => {
                 let cmp_a = equal(a1, a2);
                 if false_or_none(cmp_a) {return cmp_a};
