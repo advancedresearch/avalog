@@ -166,6 +166,8 @@ mod parsing;
 pub enum Expr {
     /// A symbol.
     Sym(Arc<String>),
+    /// A variable.
+    Var(Arc<String>),
     /// A relation between two symbols.
     Rel(Box<Expr>, Box<Expr>),
     /// A 1-avatar of some expression.
@@ -206,7 +208,7 @@ pub enum Expr {
 impl fmt::Display for Expr {
     fn fmt(&self, w: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         match self {
-            Sym(a1) => write!(w, "{}", a1)?,
+            Sym(a1) | Var(a1) => write!(w, "{}", a1)?,
             Rel(a, b) => write!(w, "({}, {})", a, b)?,
             Ava(a, b) => write!(w, "{}'({})", a, b)?,
             Inner(a) => write!(w, ".{}", a)?,
@@ -384,7 +386,7 @@ impl Expr {
                 let new_arg: Vec<Expr> = arg.iter().map(|a| a.eval_lift(eval, true)).collect();
                 Rule(Box::new(new_res), new_arg)
             }
-            Sym(_) => self.clone(),
+            Sym(_) | Var(_) => self.clone(),
             UniqAva(_) => self.clone(),
             Ambiguity(_) => self.clone(),
             Tail => self.clone(),
@@ -751,7 +753,7 @@ impl Accelerator {
                     insert(i, a);
                     insert(i, b);
                 }
-                Sym(_) | Inner(_) | UniqAva(_) => {
+                Sym(_) | Var(_) | Inner(_) | UniqAva(_) => {
                     insert(i, e);
                 }
                 AmbiguousRel(_, _, _) |
