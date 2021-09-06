@@ -1,0 +1,64 @@
+// # Path Semantical Intuitionistic Logic (PSI)
+//
+// Instructions:
+//
+// - Add `(tr, a)` to express that `a` is true.
+// - Add `(a, fa)` to express that `b` is false.
+// - Add `(tr, inf)` to enable non-terminating rules.
+
+// Contradiction if true implies false.
+amb :- (tr, fa).
+
+// Self-implication.
+(X, X) :- (X, Y).
+
+// Transitivity of implication.
+(X, Z) :- (X, Y), (Y, Z).
+
+// Lowering of equality.
+(X, Y) :- (X, eq'(Y)).
+
+// Equality (non-reflexive).
+(X, eq'(Y)) :- (X, Y), (Y, X), X != Y.
+
+// Transitivity of equality.
+(X, eq'(Z)) :- (X, eq'(Y)), (Y, eq'(Z)).
+
+// Symmetry of equality.
+(Y, eq'(X)) :- (X, eq'(Y)).
+
+// Modus ponens is covered by transitivity of implication `(tr, X)`.
+
+// Then-1.
+(Y, X) :- (tr, X), (Y, Z).
+
+// Then-2.
+(imply(X, Y), imply(X, Z)) :- (X, imply(Y, Z)).
+
+// And-1.
+(tr, X) :- (tr, and(X, Y)).
+
+// And-2.
+(tr, Y) :- (tr, and(X, Y)).
+
+// And-3.
+(Y, and(X, Y)) :- (tr, inf), (tr, X), (Y, Z).
+
+// Or-1.
+(tr, or(X, Y)) :- (tr, inf), (tr, X), (Y, Z).
+
+// False.
+// This also holds for Y due to transitivity of implication.
+(fa, X) :- (X, Y).
+
+// Lift implication to expression.
+(tr, imply(X, Y)) :- (tr, inf), (X, Y).
+
+// Lowering of implication.
+(X, Y) :- (tr, imply(X, Y)).
+
+// Lift pairs of implications to expressions.
+(tr, and(imply(X, Y), imply(Z, W))) :- (tr, inf), (X, Y), (Z, W).
+
+// Double negation lift (constructive).
+(imply(X, fa), fa) :- (tr, inf), (tr, X).
