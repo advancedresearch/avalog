@@ -718,12 +718,14 @@ pub struct Accelerator {
     pub index: HashMap<Expr, Vec<usize>>,
     /// The number of facts that has been indexed.
     pub len: usize,
+    /// The index of the last rule.
+    pub last_rule: Option<usize>,
 }
 
 impl Accelerator {
     /// Creates a new accelerator.
     pub fn new() -> Accelerator {
-        Accelerator {index: HashMap::new(), len: 0}
+        Accelerator {index: HashMap::new(), len: 0, last_rule: None}
     }
 
     /// Returns a constructor for solve-and-reduce.
@@ -898,53 +900,39 @@ pub fn infer(solver: Solver<Expr, Accelerator>, facts: &[Expr]) -> Option<Expr> 
         }
     }
 
-    // Find the last used rule.
-    // This is used for diagonalization, which means that
-    // rules are expanded using breath-first search.
-    let mut last_rule: Option<(usize, usize)> = None;
-    'outer: for (j, e2) in facts.iter().enumerate().rev() {
-        for (i, e) in facts.iter().enumerate().rev() {
-            if let Rule(_, _) = e {
-                if let Some(new_expr) = match_rule(e, e2) {
-                    if !solver.can_add(&new_expr) {
-                        last_rule = Some((i, j));
-                        break 'outer;
-                    }
-                }
-            }
-        }
-    }
-
-    match last_rule {
+    match solver.accelerator.last_rule {
         None => {
             // Normal rule order.
-            for e in facts {
+            for (i, e) in facts.iter().enumerate() {
                 if let Rule(_, _) = e {
                     for e2 in facts {
                         if let Some(new_expr) = match_rule(e, e2) {
+                            solver.accelerator.last_rule = Some(i);
                             if solver.can_add(&new_expr) {return Some(new_expr)};
                         }
                     }
                 }
             }
         }
-        Some((i, _)) => {
+        Some(i) => {
             // Diagonalize rules.
             // Start with the next rule.
-            for e in &facts[i + 1..] {
+            for (j, e) in facts[i + 1..].iter().enumerate() {
                 if let Rule(_, _) = e {
                     for e2 in facts {
                         if let Some(new_expr) = match_rule(e, e2) {
+                            solver.accelerator.last_rule = Some(i + 1 + j);
                             if solver.can_add(&new_expr) {return Some(new_expr)};
                         }
                     }
                 }
             }
             // Try previous used rules.
-            for e in &facts[..i + 1] {
+            for (j, e) in facts[..i + 1].iter().enumerate() {
                 if let Rule(_, _) = e {
                     for e2 in facts {
                         if let Some(new_expr) = match_rule(e, e2) {
+                            solver.accelerator.last_rule = Some(j);
                             if solver.can_add(&new_expr) {return Some(new_expr)};
                         }
                     }
