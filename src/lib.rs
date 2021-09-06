@@ -596,16 +596,13 @@ fn equal(a: &Expr, b: &Expr) -> Option<bool> {
     else {
         match (a, b) {
             (&Sym(_), &Sym(_)) |
-            (&Sym(_), &Var(_)) |
-            (&Var(_), &Sym(_)) |
+            (&Sym(_), &Var(_)) | (&Var(_), &Sym(_)) |
             (&Var(_), &Var(_)) |
-            (&App(_, _), &Sym(_)) |
-            (&App(_, _), &Var(_)) |
-            (&App(_, _), &Ava(_, _)) => None,
-            (&Sym(_), &Ava(_, _)) |
-            (&Var(_), &Ava(_, _)) |
-            (&Ava(_, _), &Sym(_)) |
-            (&Ava(_, _), &Var(_)) => Some(false),
+            (&Var(_), &Ava(_, _)) | (&Ava(_, _), &Var(_)) |
+            (&App(_, _), &Sym(_)) | (&Sym(_), &App(_, _)) |
+            (&App(_, _), &Var(_)) | (&Var(_), &App(_, _)) |
+            (&App(_, _), &Ava(_, _)) | (&Ava(_, _), &App(_, _)) => None,
+            (&Sym(_), &Ava(_, _)) | (&Ava(_, _), &Sym(_)) => Some(false),
             (&Ava(ref a1, ref b1), &Ava(ref a2, ref b2)) => {
                 let cmp_a = equal(a1, a2);
                 if false_or_none(cmp_a) {return cmp_a};
