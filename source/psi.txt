@@ -13,7 +13,7 @@ amb :- (tr, fa).
 (X, X) :- (X, Y).
 
 // Transitivity of implication.
-(X, Z) :- (X, Y), (Y, Z).
+(X, Z) :- (X, Y), (Y, Z), Z != T'(U).
 
 // Lowering of equality.
 (X, Y) :- (X, eq'(Y)).
