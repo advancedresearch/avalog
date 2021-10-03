@@ -15,17 +15,19 @@ amb :- (tr, fa).
 // Transitivity of implication.
 (X, Z) :- (X, Y), (Y, Z), Z != T'(U).
 
-// Lowering of equality.
-(X, Y) :- (X, eq'(Y)).
+// Lowering of quality.
+(X, Y) :- (X, q'(Y)).
 
-// Equality (non-reflexive).
-(X, eq'(Y)) :- (X, Y), (Y, X), X != Y.
+// Quality (like equality but non-reflexive).
+(X, q'(Y)) :- (X, Y), (Y, X), X != Y.
 
-// Transitivity of equality.
-(X, eq'(Z)) :- (X, eq'(Y)), (Y, eq'(Z)).
+// Transitivity of quality.
+(X, q'(Z)) :- (X, q'(Y)), (Y, q'(Z)).
 
-// Symmetry of equality.
-(Y, eq'(X)) :- (X, eq'(Y)).
+// Symmetry of quality.
+(Y, q'(X)) :- (X, q'(Y)).
+
+// ### Intuitionistic logic
 
 // Modus ponens is covered by transitivity of implication `(tr, X)`.
 
@@ -51,6 +53,8 @@ amb :- (tr, fa).
 // This also holds for Y due to transitivity of implication.
 (fa, X) :- (X, Y).
 
+// ### Other axioms
+
 // Lift implication to expression.
 (tr, imply(X, Y)) :- (tr, inf), (X, Y).
 
@@ -62,3 +66,4 @@ amb :- (tr, fa).
 
 // Double negation lift (constructive).
 (imply(X, fa), fa) :- (tr, inf), (tr, X).
+
