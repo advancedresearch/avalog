@@ -51,7 +51,7 @@ amb :- (tr, fa).
 
 // False.
 // This also holds for Y due to transitivity of implication.
-(fa, X) :- (X, Y).
+(fa, X) :- (X, Y), X != T'(U).
 
 // ### Other axioms
 
