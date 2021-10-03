@@ -67,3 +67,23 @@ amb :- (tr, fa).
 // Double negation lift (constructive).
 (imply(X, fa), fa) :- (tr, inf), (tr, X).
 
+// Core axiom of Path Semantics
+(X0, q'(X1)) :- (F0, q'(F1)), (F0, X0), (F1, X1), (F0, gt'(X0)), (F1, gt'(X1)).
+
+// Other axioms for greater-than relation.
+// These are used to support path semantical levels.
+(X, gt'(Z)) :- (X, gt'(Y)), (Y, gt'(Z)).
+(X, gt'(Y)) :- (X, z), (Y, s'(z)).
+(X, gt'(Y)) :- (X, s'(N)), (Y, s'(M)), (N, gt'(M)).
+
+// Natural numbers.
+uniq s
+z : nat
+s'(X) : nat :- X : nat, (tr, inf).
+X : nat :- s'(X) : nat.
+(X, gt'(s'(X))) :- s'(X) : nat.
+
+// Set maximum number of path semantical levels for terminating rules.
+// s'(s'(z)) : nat
+s'(z) : nat
+
