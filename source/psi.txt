@@ -3,7 +3,7 @@
 // Instructions:
 //
 // - Add `(tr, a)` to express that `a` is true.
-// - Add `(a, fa)` to express that `b` is false.
+// - Add `(a, fa)` to express that `a` is false.
 // - Add `(tr, inf)` to enable non-terminating rules.
 
 // Contradiction if true implies false.
