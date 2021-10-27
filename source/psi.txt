@@ -12,6 +12,9 @@ amb :- (tr, fa).
 // Self-implication.
 (X, X) :- (X, Y).
 
+// Other-self-implication.
+(Y, Y) :- (X, Y).
+
 // Transitivity of implication.
 (X, Z) :- (X, Y), (Y, Z), Z != T'(U).
 
@@ -86,4 +89,3 @@ X : nat :- s'(X) : nat.
 // Set maximum number of path semantical levels for terminating rules.
 // s'(s'(z)) : nat
 s'(z) : nat
-
