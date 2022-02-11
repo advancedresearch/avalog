@@ -136,7 +136,8 @@ fn main() {
                         }
                     }
                 } else if x.starts_with("echo ") {
-                    match parse_str(x[5..].trim(), parent) {
+                    let res: ParseResult = parse_str(x[5..].trim(), parent);
+                    match res {
                         Ok(facts) => {
                             println!("{:#?}", facts);
                             continue;

@@ -1,9 +1,9 @@
 extern crate avalog;
 
 fn check(facts: &'static str, goals: &'static str) {
-    use avalog::{solve_with_accelerator, parse, infer, Accelerator};
+    use avalog::{solve_with_accelerator, parse, infer, Accelerator, ParseData};
 
-    let facts = parse(facts).unwrap();
+    let facts: ParseData = parse(facts).unwrap();
     let goals = parse(goals).unwrap();
     assert!(solve_with_accelerator(
         &facts,
@@ -17,9 +17,9 @@ fn check(facts: &'static str, goals: &'static str) {
 }
 
 fn fail(facts: &'static str, goals: &'static str) {
-    use avalog::{solve_with_accelerator, parse, infer, Accelerator};
+    use avalog::{solve_with_accelerator, parse, infer, Accelerator, ParseData};
 
-    let facts = parse(facts).unwrap();
+    let facts: ParseData = parse(facts).unwrap();
     let goals = parse(goals).unwrap();
     assert!(solve_with_accelerator(
         &facts,
