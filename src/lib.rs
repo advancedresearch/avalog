@@ -153,6 +153,8 @@
 use std::sync::Arc;
 use std::fmt;
 use std::collections::HashMap;
+use std::cmp;
+use std::hash::Hash;
 
 use Expr::*;
 
@@ -161,37 +163,61 @@ pub use parsing::*;
 
 mod parsing;
 
+/// Implemented by symbol types.
+pub trait Symbol:
+    Into<Expr<Self>> +
+    From<Arc<String>> +
+    Clone +
+    fmt::Debug +
+    fmt::Display +
+    cmp::PartialEq +
+    cmp::Eq +
+    cmp::PartialOrd +
+    Hash {}
+
+impl<T> Symbol for T
+    where T: Into<Expr<T>> +
+             From<Arc<String>> +
+             Clone +
+             fmt::Debug +
+             fmt::Display +
+             cmp::PartialEq +
+             cmp::Eq +
+             cmp::PartialOrd +
+             Hash
+{}
+
 /// Represents an expression.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub enum Expr {
+pub enum Expr<T: Symbol = Arc<String>> {
     /// A symbol.
-    Sym(Arc<String>),
+    Sym(T),
     /// A variable.
     Var(Arc<String>),
     /// A relation between two symbols.
-    Rel(Box<Expr>, Box<Expr>),
+    Rel(Box<Expr<T>>, Box<Expr<T>>),
     /// A 1-avatar of some expression.
-    Ava(Box<Expr>, Box<Expr>),
+    Ava(Box<Expr<T>>, Box<Expr<T>>),
     /// Unwraps 1-avatar.
-    Inner(Box<Expr>),
+    Inner(Box<Expr<T>>),
     /// A 1-avatar `q'(b)` such that `p(a) = q'(b)`.
-    UniqAva(Box<Expr>),
+    UniqAva(Box<Expr<T>>),
     /// A role of expression.
-    RoleOf(Box<Expr>, Box<Expr>),
+    RoleOf(Box<Expr<T>>, Box<Expr<T>>),
     /// An equality, e.g. `p(a) = b`.
-    Eq(Box<Expr>, Box<Expr>),
+    Eq(Box<Expr<T>>, Box<Expr<T>>),
     /// An inequality, e.g. `X != a`.
-    Neq(Box<Expr>, Box<Expr>),
+    Neq(Box<Expr<T>>, Box<Expr<T>>),
     /// A set membership relation, e.g. `p(a) ∋ b`.
-    Has(Box<Expr>, Box<Expr>),
+    Has(Box<Expr<T>>, Box<Expr<T>>),
     /// Apply an argument to a role, e.g. `p(a)`.
-    App(Box<Expr>, Box<Expr>),
+    App(Box<Expr<T>>, Box<Expr<T>>),
     /// There is an ambiguous role.
-    AmbiguousRole(Box<Expr>, Box<Expr>, Box<Expr>),
+    AmbiguousRole(Box<Expr<T>>, Box<Expr<T>>, Box<Expr<T>>),
     /// There is an ambiguous relation.
-    AmbiguousRel(Box<Expr>, Box<Expr>, Box<Expr>),
+    AmbiguousRel(Box<Expr<T>>, Box<Expr<T>>, Box<Expr<T>>),
     /// Defines a rule.
-    Rule(Box<Expr>, Vec<Expr>),
+    Rule(Box<Expr<T>>, Vec<Expr<T>>),
     /// Ambiguity summary.
     ///
     /// This is `true` when some ambiguity is found,
@@ -200,15 +226,16 @@ pub enum Expr {
     /// Represents the tail of an argument list `..`.
     Tail,
     /// Represents the tail of an argument list bound a symbol `..x`.
-    TailSym(Arc<String>),
+    TailVar(Arc<String>),
     /// Represents a list.
-    List(Vec<Expr>),
+    List(Vec<Expr<T>>),
 }
 
-impl fmt::Display for Expr {
+impl<T: Symbol> fmt::Display for Expr<T> {
     fn fmt(&self, w: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         match self {
-            Sym(a1) | Var(a1) => write!(w, "{}", a1)?,
+            Sym(a) => write!(w, "{}", a)?,
+            Var(a) => write!(w, "{}", a)?,
             Rel(a, b) => write!(w, "({}, {})", a, b)?,
             Ava(a, b) => write!(w, "{}'({})", a, b)?,
             Inner(a) => write!(w, ".{}", a)?,
@@ -262,7 +289,7 @@ impl fmt::Display for Expr {
                 write!(w, ".")?;
             }
             Tail => write!(w, "..")?,
-            TailSym(a) => write!(w, "..{}", a)?,
+            TailVar(a) => write!(w, "..{}", a)?,
             List(a) => {
                 write!(w, "[")?;
                 let mut first = true;
@@ -280,8 +307,8 @@ impl fmt::Display for Expr {
     }
 }
 
-impl From<Arc<String>> for Expr {
-    fn from(val: Arc<String>) -> Expr {
+impl From<Arc<String>> for Expr<Arc<String>> {
+    fn from(val: Arc<String>) -> Expr<Arc<String>> {
         if let Some(c) = val.chars().next() {
             if c.is_uppercase() {return Var(val)};
         }
@@ -289,8 +316,8 @@ impl From<Arc<String>> for Expr {
     }
 }
 
-impl From<&'static str> for Expr {
-    fn from(val: &'static str) -> Expr {
+impl From<&'static str> for Expr<Arc<String>> {
+    fn from(val: &'static str) -> Expr<Arc<String>> {
         if let Some(c) = val.chars().next() {
             if c.is_uppercase() {return Var(Arc::new(val.into()))};
         }
@@ -299,71 +326,69 @@ impl From<&'static str> for Expr {
 }
 
 /// Constructs a unique directive expression, e.g. `uniq a`.
-pub fn uniq_ava<T>(a: T) -> Expr
-    where T: Into<Expr>
+pub fn uniq_ava<T, S>(a: T) -> Expr<S>
+    where T: Into<Expr<S>>, S: Symbol
 {
     UniqAva(Box::new(a.into()))
 }
 
 /// Constructs a role-of expression, e.g. `a : b`.
-pub fn role_of<T, U>(a: T, b: U) -> Expr
-    where T: Into<Expr>, U: Into<Expr>
+pub fn role_of<T, U, S>(a: T, b: U) -> Expr<S>
+    where T: Into<Expr<S>>, U: Into<Expr<S>>, S: Symbol
 {
     RoleOf(Box::new(a.into()), Box::new(b.into()))
 }
 
 /// Constructs a relation expression, e.g. `(a, b)`.
-pub fn rel<T, U>(a: T, b: U) -> Expr
-    where T: Into<Expr>, U: Into<Expr>
+pub fn rel<T, U, S>(a: T, b: U) -> Expr<S>
+    where T: Into<Expr<S>>, U: Into<Expr<S>>, S: Symbol
 {
     Rel(Box::new(a.into()), Box::new(b.into()))
 }
 
 /// Constructs a 1-avatar expression, e.g. `p'(a)`.
-pub fn ava<T, U>(a: T, b: U) -> Expr
-    where T: Into<Expr>, U: Into<Expr>
+pub fn ava<T, U, S>(a: T, b: U) -> Expr<S>
+    where T: Into<Expr<S>>, U: Into<Expr<S>>, S: Symbol
 {
     Ava(Box::new(a.into()), Box::new(b.into()))
 }
 
 /// Constructs an equality expression.
-pub fn eq<T, U>(a: T, b: U) -> Expr
-    where T: Into<Expr>, U: Into<Expr>
+pub fn eq<T, U, S>(a: T, b: U) -> Expr<S>
+    where T: Into<Expr<S>>, U: Into<Expr<S>>, S: Symbol
 {
     Eq(Box::new(a.into()), Box::new(b.into()))
 }
 
 /// Constructs an inequality expression.
-pub fn neq<T, U>(a: T, b: U) -> Expr
-    where T: Into<Expr>, U: Into<Expr>
+pub fn neq<T, U, S>(a: T, b: U) -> Expr<S>
+    where T: Into<Expr<S>>, U: Into<Expr<S>>, S: Symbol
 {
     Neq(Box::new(a.into()), Box::new(b.into()))
 }
 
 /// Constructs a "has" expression e.g. `p(a) => b`.
-pub fn has<T, U>(a: T, b: U) -> Expr
-    where T: Into<Expr>, U: Into<Expr>
+pub fn has<T, U, S>(a: T, b: U) -> Expr<S>
+    where T: Into<Expr<S>>, U: Into<Expr<S>>, S: Symbol
 {
     Has(Box::new(a.into()), Box::new(b.into()))
 }
 
 /// Constructs an apply expression.
-pub fn app<T, U>(a: T, b: U) -> Expr
-    where T: Into<Expr>, U: Into<Expr>
+pub fn app<T, U, S>(a: T, b: U) -> Expr<S>
+    where T: Into<Expr<S>>, U: Into<Expr<S>>, S: Symbol
 {
     App(Box::new(a.into()), Box::new(b.into()))
 }
 
 /// Constructs an inner expression e.g. `.p'(a) = a`.
-pub fn inner<T>(a: T) -> Expr
-    where T: Into<Expr>
-{
+pub fn inner<T: Into<Expr<S>>, S: Symbol>(a: T) -> Expr<S> {
     Inner(Box::new(a.into()))
 }
 
 /// Constructs an ambiguous role expression.
-pub fn ambiguous_role<T, U, V>(a: T, b: U, c: V) -> Expr
-    where T: Into<Expr>, U: Into<Expr>, V: Into<Expr>
+pub fn ambiguous_role<T, U, V, S>(a: T, b: U, c: V) -> Expr<S>
+    where T: Into<Expr<S>>, U: Into<Expr<S>>, V: Into<Expr<S>>, S: Symbol
 {
     let b = b.into();
     let c = c.into();
@@ -372,8 +397,8 @@ pub fn ambiguous_role<T, U, V>(a: T, b: U, c: V) -> Expr
 }
 
 /// Constructs an ambiguous relation expression.
-pub fn ambiguous_rel<T, U, V>(a: T, b: U, c: V) -> Expr
-    where T: Into<Expr>, U: Into<Expr>, V: Into<Expr>
+pub fn ambiguous_rel<T, U, V, S>(a: T, b: U, c: V) -> Expr<S>
+    where T: Into<Expr<S>>, U: Into<Expr<S>>, V: Into<Expr<S>>, S: Symbol
 {
     let b = b.into();
     let c = c.into();
@@ -381,9 +406,9 @@ pub fn ambiguous_rel<T, U, V>(a: T, b: U, c: V) -> Expr
     AmbiguousRel(Box::new(a.into()), Box::new(b), Box::new(c))
 }
 
-impl Expr {
+impl<T: Symbol> Expr<T> {
     /// Lifts apply with an eval role.
-    pub fn eval_lift(&self, eval: &Arc<String>, top: bool) -> Expr {
+    pub fn eval_lift(&self, eval: &T, top: bool) -> Expr<T> {
         match self {
             Rel(a, b) => rel(a.eval_lift(eval, true), b.eval_lift(eval, true)),
             App(a, b) => {
@@ -397,14 +422,14 @@ impl Expr {
             }
             Rule(res, arg) => {
                 let new_res = res.eval_lift(eval, true);
-                let new_arg: Vec<Expr> = arg.iter().map(|a| a.eval_lift(eval, true)).collect();
+                let new_arg: Vec<Expr<T>> = arg.iter().map(|a| a.eval_lift(eval, true)).collect();
                 Rule(Box::new(new_res), new_arg)
             }
             Sym(_) | Var(_) => self.clone(),
             UniqAva(_) => self.clone(),
             Ambiguity(_) => self.clone(),
             Tail => self.clone(),
-            TailSym(_) => self.clone(),
+            TailVar(_) => self.clone(),
             RoleOf(a, b) => {
                 role_of(a.eval_lift(eval, false), b.eval_lift(eval, false))
             }
@@ -441,7 +466,7 @@ impl Expr {
     /// Returns `true` if expression is a tail pattern.
     pub fn is_tail(&self) -> bool {
         match self {
-            Tail | TailSym(_) => true,
+            Tail | TailVar(_) => true,
             _ => false
         }
     }
@@ -453,7 +478,12 @@ impl Expr {
 }
 
 /// Bind `a` to pattern `e`.
-pub fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>, tail: &mut Vec<Expr>) -> bool {
+pub fn bind<T: Symbol>(
+    e: &Expr<T>,
+    a: &Expr<T>,
+    vs: &mut Vec<(Arc<String>, Expr<T>)>,
+    tail: &mut Vec<Expr<T>>
+) -> bool {
     match (e, a) {
         (&Rel(ref a1, ref b1), &Rel(ref a2, ref b2)) => {
             bind(a1, a2, vs, tail) &&
@@ -478,7 +508,7 @@ pub fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>, tail: &mut Ve
                 bind(e, a2, vs, tail)
             } else {
                 bind(a1, a2, vs, tail) &&
-                if let TailSym(b1_sym) = &**b1 {
+                if let TailVar(b1_sym) = &**b1 {
                     if tail.len() > 0 {
                         tail.reverse();
                         vs.push((b1_sym.clone(), List(tail.clone())));
@@ -528,7 +558,7 @@ pub fn bind(e: &Expr, a: &Expr, vs: &mut Vec<(Arc<String>, Expr)>, tail: &mut Ve
     }
 }
 
-fn substitute(r: &Expr, vs: &Vec<(Arc<String>, Expr)>) -> Expr {
+fn substitute<T: Symbol>(r: &Expr<T>, vs: &Vec<(Arc<String>, Expr<T>)>) -> Expr<T> {
     match r {
         Rel(a1, b1) => {
             rel(substitute(a1, vs), substitute(b1, vs))
@@ -587,7 +617,7 @@ fn substitute(r: &Expr, vs: &Vec<(Arc<String>, Expr)>) -> Expr {
 
 // Returns `Some(true)` if two expressions are proven to be equal,
 // `Some(false)` when proven to be inequal, and `None` when unknown.
-fn equal(a: &Expr, b: &Expr) -> Option<bool> {
+fn equal<T: Symbol>(a: &Expr<T>, b: &Expr<T>) -> Option<bool> {
     fn false_or_none(val: Option<bool>) -> bool {
         if let Some(val) = val {!val} else {true}
     }
@@ -614,10 +644,10 @@ fn equal(a: &Expr, b: &Expr) -> Option<bool> {
     }
 }
 
-fn match_rule(r: &Expr, rel: &Expr) -> Option<Expr> {
+fn match_rule<T: Symbol>(r: &Expr<T>, rel: &Expr<T>) -> Option<Expr<T>> {
     if let Rule(res, args) = r {
         let mut vs = vec![];
-        let mut tail = vec![];
+        let mut tail: Vec<Expr<T>> = vec![];
         if bind(&args[0], rel, &mut vs, &mut tail) {
             if args.len() > 1 {
                 let mut new_args = vec![];
@@ -649,7 +679,7 @@ fn match_rule(r: &Expr, rel: &Expr) -> Option<Expr> {
     }
 }
 
-fn apply(e: &Expr, facts: &[Expr]) -> Option<Expr> {
+fn apply<T: Symbol>(e: &Expr<T>, facts: &[Expr<T>]) -> Option<Expr<T>> {
     match e {
         App(a, b) => {
             for e2 in facts {
@@ -710,31 +740,33 @@ fn apply(e: &Expr, facts: &[Expr]) -> Option<Expr> {
 }
 
 /// Index of sub-expressions.
-pub struct Accelerator {
+pub struct Accelerator<T: Symbol> {
     /// Index for each sub-expression.
-    pub index: HashMap<Expr, Vec<usize>>,
+    pub index: HashMap<Expr<T>, Vec<usize>>,
     /// The number of facts that has been indexed.
     pub len: usize,
     /// The index of the last rule.
     pub last_rule: Option<usize>,
 }
 
-impl Accelerator {
+impl<T: Symbol> Accelerator<T> {
     /// Creates a new accelerator.
-    pub fn new() -> Accelerator {
+    pub fn new() -> Accelerator<T> {
         Accelerator {index: HashMap::new(), len: 0, last_rule: None}
     }
 
     /// Returns a constructor for solve-and-reduce.
-    pub fn constructor() -> fn(&[Expr], &[Expr]) -> Accelerator {
+    pub fn constructor() -> fn(&[Expr<T>], &[Expr<T>]) -> Accelerator<T> {
         |_, _| Accelerator::new()
     }
 
     /// Updates the accelerator with list of facts.
-    pub fn update(&mut self, facts: &[Expr]) {
+    pub fn update(&mut self, facts: &[Expr<T>])
+        where T: Clone + std::hash::Hash + std::cmp::Eq
+    {
         let accelerator_len = self.len;
         let ref mut index = self.index;
-        let mut insert = |i: usize, e: &Expr| {
+        let mut insert = |i: usize, e: &Expr<T>| {
             index.entry(e.clone()).or_insert(vec![]).push(i);
         };
         for (i, e) in facts[accelerator_len..].iter().enumerate() {
@@ -752,7 +784,7 @@ impl Accelerator {
                 AmbiguousRole(_, _, _) |
                 Rule(_, _) |
                 Ambiguity(_) |
-                Tail | TailSym(_) | List(_) => {}
+                Tail | TailVar(_) | List(_) => {}
             }
         }
         self.len = facts.len();
@@ -760,10 +792,13 @@ impl Accelerator {
 }
 
 /// Specifies inference rules for monotonic solver.
-pub fn infer(solver: Solver<Expr, Accelerator>, facts: &[Expr]) -> Option<Expr> {
+pub fn infer<T: Symbol>(
+    solver: Solver<Expr<T>, Accelerator<T>>,
+    facts: &[Expr<T>]
+) -> Option<Expr<T>> {
     // Build an index to improve worst-case performance.
     solver.accelerator.update(facts);
-    let find = |e: &Expr| {
+    let find = |e: &Expr<T>| {
         solver.accelerator.index.get(e).unwrap().iter().map(|&i| &facts[i])
     };
 
@@ -808,7 +843,7 @@ pub fn infer(solver: Solver<Expr, Accelerator>, facts: &[Expr]) -> Option<Expr> 
         if let Rel(a, b) = e {
             if let Ava(av, _) = &**b {
                 // Avatar Binary Relation.
-                let mut b_role: Option<Expr> = None;
+                let mut b_role: Option<Expr<T>> = None;
                 let mut uniq = false;
                 for e2 in find(b) {
                     if let RoleOf(b2, r) = e2 {
@@ -857,7 +892,7 @@ pub fn infer(solver: Solver<Expr, Accelerator>, facts: &[Expr]) -> Option<Expr> 
                 }
             } else {
                 // Unique Universal Binary Relation.
-                let mut b_role: Option<Expr> = None;
+                let mut b_role: Option<Expr<T>> = None;
                 for e2 in find(b) {
                     if let RoleOf(b2, r) = e2 {
                         if b2 == b {

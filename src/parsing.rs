@@ -3,17 +3,17 @@ use crate::*;
 use piston_meta::{Convert, Range};
 use std::path::Path;
 
-fn parse_rule(
+fn parse_rule<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut res: Option<Expr> = None;
-    let mut args: Vec<Expr> = vec![];
+    let mut res: Option<Expr<T>> = None;
+    let mut args: Vec<Expr<T>> = vec![];
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -35,16 +35,16 @@ fn parse_rule(
     Ok((convert.subtract(start), Expr::Rule(Box::new(res), args)))
 }
 
-fn parse_inner(
+fn parse_inner<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut arg: Option<Expr> = None;
+    let mut arg: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -63,24 +63,24 @@ fn parse_inner(
     Ok((convert.subtract(start), Expr::Inner(Box::new(arg))))
 }
 
-fn parse_app(
+fn parse_app<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut f: Option<Arc<String>> = None;
-    let mut arg: Vec<Expr> = vec![];
+    let mut f: Option<T> = None;
+    let mut arg: Vec<Expr<T>> = vec![];
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
             break;
         } else if let Ok((range, v)) = convert.meta_string("f") {
             convert.update(range);
-            f = Some(v);
+            f = Some(v.into());
         } else if let Ok((range, v)) = parse_expr("arg", convert, ignored) {
             convert.update(range);
             arg.push(v);
@@ -89,7 +89,7 @@ fn parse_app(
             if v {arg.push(Tail)};
         } else if let Ok((range, v)) = convert.meta_string("tail_sym") {
             convert.update(range);
-            arg.push(TailSym(v));
+            arg.push(TailVar(v.into()));
         } else {
             let range = convert.ignore();
             convert.update(range);
@@ -106,24 +106,24 @@ fn parse_app(
     Ok((convert.subtract(start), expr))
 }
 
-fn parse_ava(
+fn parse_ava<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut avatar: Option<Arc<String>> = None;
-    let mut core: Option<Expr> = None;
+    let mut avatar: Option<T> = None;
+    let mut core: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
             break;
         } else if let Ok((range, v)) = convert.meta_string("avatar") {
             convert.update(range);
-            avatar = Some(v);
+            avatar = Some(v.into());
         } else if let Ok((range, v)) = parse_expr("core", convert, ignored) {
             convert.update(range);
             core = Some(v);
@@ -142,16 +142,16 @@ fn parse_ava(
     )))
 }
 
-fn parse_uniq(
+fn parse_uniq<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut arg: Option<Expr> = None;
+    let mut arg: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -173,22 +173,23 @@ fn parse_uniq(
 /// Parses symbol or variable.
 ///
 /// Converts to variable automatically when starting with upper case.
-fn parse_sym_or_var(
+fn parse_sym_or_var<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut val: Option<Expr> = None;
+    let mut val: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
             break;
         } else if let Ok((range, v)) = convert.meta_string("val") {
             convert.update(range);
+            let v: T = v.into();
             val = Some(v.into());
         } else {
             let range = convert.ignore();
@@ -201,18 +202,18 @@ fn parse_sym_or_var(
     Ok((convert.subtract(start), val))
 }
 
-fn parse_has(
+fn parse_has<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut f: Option<Expr> = None;
-    let mut arg: Option<Expr> = None;
-    let mut res: Option<Expr> = None;
+    let mut f: Option<Expr<T>> = None;
+    let mut arg: Option<Expr<T>> = None;
+    let mut res: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -242,18 +243,18 @@ fn parse_has(
     )))
 }
 
-fn parse_eq(
+fn parse_eq<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut f: Option<Expr> = None;
-    let mut arg: Option<Expr> = None;
-    let mut res: Option<Expr> = None;
+    let mut f: Option<Expr<T>> = None;
+    let mut arg: Option<Expr<T>> = None;
+    let mut res: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -283,17 +284,17 @@ fn parse_eq(
     )))
 }
 
-fn parse_neq(
+fn parse_neq<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut left: Option<Expr> = None;
-    let mut right: Option<Expr> = None;
+    let mut left: Option<Expr<T>> = None;
+    let mut right: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -319,17 +320,17 @@ fn parse_neq(
     )))
 }
 
-fn parse_role_of(
+fn parse_role_of<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut arg: Option<Expr> = None;
-    let mut role: Option<Expr> = None;
+    let mut arg: Option<Expr<T>> = None;
+    let mut role: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -355,18 +356,18 @@ fn parse_role_of(
     )))
 }
 
-fn parse_amb_role(
+fn parse_amb_role<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut a: Option<Expr> = None;
-    let mut b1: Option<Expr> = None;
-    let mut b2: Option<Expr> = None;
+    let mut a: Option<Expr<T>> = None;
+    let mut b1: Option<Expr<T>> = None;
+    let mut b2: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -393,18 +394,18 @@ fn parse_amb_role(
     Ok((convert.subtract(start), ambiguous_role(a, b1, b2)))
 }
 
-fn parse_amb_rel(
+fn parse_amb_rel<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut a: Option<Expr> = None;
-    let mut b1: Option<Expr> = None;
-    let mut b2: Option<Expr> = None;
+    let mut a: Option<Expr<T>> = None;
+    let mut b1: Option<Expr<T>> = None;
+    let mut b2: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -431,17 +432,17 @@ fn parse_amb_rel(
     Ok((convert.subtract(start), ambiguous_rel(a, b1, b2)))
 }
 
-fn parse_rel(
+fn parse_rel<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut a: Option<Expr> = None;
-    let mut b: Option<Expr> = None;
+    let mut a: Option<Expr<T>> = None;
+    let mut b: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -467,16 +468,16 @@ fn parse_rel(
     )))
 }
 
-fn parse_expr(
+fn parse_expr<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>
-) -> Result<(Range, Expr), ()> {
+) -> Result<(Range, Expr<T>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut expr: Option<Expr> = None;
+    let mut expr: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -534,19 +535,19 @@ fn parse_expr(
     Ok((convert.subtract(start), expr))
 }
 
-fn parse_data(
+fn parse_data<T: Symbol>(
     node: &str,
     mut convert: Convert,
     ignored: &mut Vec<Range>,
     parent: &Path
-) -> Result<(Range, Vec<Expr>), ()> {
+) -> Result<(Range, Vec<Expr<T>>), ()> {
     let start = convert;
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut res = vec![];
-    let mut eval: Option<Arc<String>> = None;
-    let mut role: Option<Expr> = None;
+    let mut res: Vec<Expr<T>> = vec![];
+    let mut eval: Option<T> = None;
+    let mut role: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
             convert.update(range);
@@ -562,7 +563,7 @@ fn parse_data(
             res.push(val);
         } else if let Ok((range, val)) = convert.meta_string("eval") {
             convert.update(range);
-            eval = Some(val);
+            eval = Some(val.into());
         } else if let Ok((range, val)) = convert.meta_bool("no_eval") {
             convert.update(range);
             if val {eval = None};
@@ -578,7 +579,7 @@ fn parse_data(
         } else if let Ok((range, val)) = parse_expr("arg", convert, ignored) {
             convert.update(range);
             if let Some(role) = role.as_ref() {
-                res.push(RoleOf(Box::new(val), Box::new(role.clone())));
+                res.push(RoleOf(Box::new(val), Box::new(role.clone().into())));
             }
         } else {
             let range = convert.ignore();
@@ -591,7 +592,10 @@ fn parse_data(
 }
 
 /// Parses a string.
-pub fn parse_str(data: &str, parent: &Path) -> Result<Vec<Expr>, String> {
+pub fn parse_str<T: Symbol>(
+    data: &str,
+    parent: &Path
+) -> Result<Vec<Expr<T>>, String> {
     use piston_meta::{parse_errstr, syntax_errstr};
 
     let syntax_src = include_str!("../assets/syntax.txt");
@@ -610,8 +614,15 @@ pub fn parse_str(data: &str, parent: &Path) -> Result<Vec<Expr>, String> {
     }
 }
 
+/// Helps specifying the parse data type.
+pub type ParseData<T = Arc<String>> = Vec<Expr<T>>;
+/// Helps specifying the type of the parsing result.
+pub type ParseResult<T = Arc<String>> = Result<ParseData<T>, String>;
+
 /// Parses a source file.
-pub fn parse<P: AsRef<Path>>(source: P) -> Result<Vec<Expr>, String> {
+pub fn parse<P, T>(source: P) -> ParseResult<T>
+    where P: AsRef<Path>, T: Symbol
+{
     use std::fs::File;
     use std::io::Read;
 
