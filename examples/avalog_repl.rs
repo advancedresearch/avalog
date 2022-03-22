@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use avalog::*;
 
 fn main() {
-    println!("=== Avalog 0.5 ===");
+    println!("=== Avalog 0.7 ===");
     println!("Type `help` for more information.");
 
     let ref parent = match std::env::current_dir() {

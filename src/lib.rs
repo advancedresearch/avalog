@@ -6,7 +6,7 @@
 //! with a Prolog-like syntax.
 //!
 //! ```text
-//! === Avalog 0.5 ===
+//! === Avalog 0.7 ===
 //! Type `help` for more information.
 //! > parent'(alice) : mom
 //! > (bob, parent'(alice))
