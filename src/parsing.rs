@@ -72,7 +72,7 @@ fn parse_app<T: Symbol>(
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut f: Option<T> = None;
+    let mut f: Option<Expr<T>> = None;
     let mut arg: Vec<Expr<T>> = vec![];
     loop {
         if let Ok(range) = convert.end_node(node) {
@@ -80,7 +80,11 @@ fn parse_app<T: Symbol>(
             break;
         } else if let Ok((range, v)) = convert.meta_string("f") {
             convert.update(range);
-            f = Some(v.into());
+            if T::is_var(&v) {
+                f = Some(Expr::Var(v));
+            } else {
+                f = Some(Expr::Sym(v.into()));
+            }
         } else if let Ok((range, v)) = parse_expr("arg", convert, ignored) {
             convert.update(range);
             arg.push(v);
@@ -97,8 +101,7 @@ fn parse_app<T: Symbol>(
         }
     }
 
-    let f = f.ok_or(())?;
-    let mut expr = f.into();
+    let mut expr = f.ok_or(())?;
     for a in &arg {
         expr = app(expr, a.clone());
     }
@@ -115,7 +118,7 @@ fn parse_ava<T: Symbol>(
     let start_range = convert.start_node(node)?;
     convert.update(start_range);
 
-    let mut avatar: Option<T> = None;
+    let mut avatar: Option<Expr<T>> = None;
     let mut core: Option<Expr<T>> = None;
     loop {
         if let Ok(range) = convert.end_node(node) {
@@ -123,7 +126,11 @@ fn parse_ava<T: Symbol>(
             break;
         } else if let Ok((range, v)) = convert.meta_string("avatar") {
             convert.update(range);
-            avatar = Some(v.into());
+            if T::is_var(&v) {
+                avatar = Some(Expr::Var(v));
+            } else {
+                avatar = Some(Expr::Sym(v.into()));
+            }
         } else if let Ok((range, v)) = parse_expr("core", convert, ignored) {
             convert.update(range);
             core = Some(v);
@@ -137,7 +144,7 @@ fn parse_ava<T: Symbol>(
     let avatar = avatar.ok_or(())?;
     let core = core.ok_or(())?;
     Ok((convert.subtract(start), Expr::Ava(
-        Box::new(avatar.into()),
+        Box::new(avatar),
         Box::new(core)
     )))
 }
@@ -189,8 +196,11 @@ fn parse_sym_or_var<T: Symbol>(
             break;
         } else if let Ok((range, v)) = convert.meta_string("val") {
             convert.update(range);
-            let v: T = v.into();
-            val = Some(v.into());
+            if T::is_var(&v) {
+                val = Some(Expr::Var(v));
+            } else {
+                val = Some(Expr::Sym(v.into()));
+            }
         } else {
             let range = convert.ignore();
             convert.update(range);
