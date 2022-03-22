@@ -163,9 +163,17 @@ pub use parsing::*;
 
 mod parsing;
 
+/// Detect a variable when parsing.
+pub trait IsVar {
+    /// Returns `true` if string is a variable.
+    fn is_var(val: &str) -> bool {
+        if let Some(c) = val.chars().next() {c.is_uppercase()} else {false}
+    }
+}
+
 /// Implemented by symbol types.
 pub trait Symbol:
-    Into<Expr<Self>> +
+    IsVar +
     From<Arc<String>> +
     Clone +
     fmt::Debug +
@@ -173,10 +181,13 @@ pub trait Symbol:
     cmp::PartialEq +
     cmp::Eq +
     cmp::PartialOrd +
-    Hash {}
+    Hash {
+}
+
+impl IsVar for Arc<String> {}
 
 impl<T> Symbol for T
-    where T: Into<Expr<T>> +
+    where T: IsVar +
              From<Arc<String>> +
              Clone +
              fmt::Debug +
@@ -304,24 +315,6 @@ impl<T: Symbol> fmt::Display for Expr<T> {
             }
         }
         Ok(())
-    }
-}
-
-impl From<Arc<String>> for Expr<Arc<String>> {
-    fn from(val: Arc<String>) -> Expr<Arc<String>> {
-        if let Some(c) = val.chars().next() {
-            if c.is_uppercase() {return Var(val)};
-        }
-        Sym(val)
-    }
-}
-
-impl From<&'static str> for Expr<Arc<String>> {
-    fn from(val: &'static str) -> Expr<Arc<String>> {
-        if let Some(c) = val.chars().next() {
-            if c.is_uppercase() {return Var(Arc::new(val.into()))};
-        }
-        Sym(Arc::new(val.into()))
     }
 }
 
