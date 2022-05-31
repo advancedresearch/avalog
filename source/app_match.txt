@@ -1,0 +1,3 @@
+(a, fun(b, c))
+
+(A, B) :- (A, C), C != fun(D, E).

@@ -626,7 +626,8 @@ fn equal<T: Symbol>(a: &Expr<T>, b: &Expr<T>) -> Option<bool> {
             (&App(_, _), &Var(_)) | (&Var(_), &App(_, _)) |
             (&App(_, _), &Ava(_, _)) | (&Ava(_, _), &App(_, _)) => None,
             (&Sym(_), &Ava(_, _)) | (&Ava(_, _), &Sym(_)) => Some(false),
-            (&Ava(ref a1, ref b1), &Ava(ref a2, ref b2)) => {
+            (&Ava(ref a1, ref b1), &Ava(ref a2, ref b2)) |
+            (&App(ref a1, ref b1), &App(ref a2, ref b2)) => {
                 let cmp_a = equal(a1, a2);
                 if false_or_none(cmp_a) {return cmp_a};
                 equal(b1, b2)
