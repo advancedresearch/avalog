@@ -104,3 +104,8 @@ fn amb_success() {
     check("source/amb_success.txt", "source/amb.txt");
     check("source/amb_success-2.txt", "source/amb.txt");
 }
+
+#[test]
+fn app_match() {
+    fail("source/app_match.txt", "source/amb.txt");
+}
