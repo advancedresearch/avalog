@@ -115,3 +115,8 @@ fn string() {
     check("source/string.txt", "source/string.txt");
 }
 
+#[test]
+fn app_empty() {
+    check("source/app_empty.txt", "source/app_empty.txt");
+}
+
