@@ -33,7 +33,7 @@ _seps: "/(){},.:='-!"
 8 uniq = ["uniq" .w! term:"arg"]
 7 eq = [term_no_app:"f" .w? "(" .w? term:"arg" .w? ")" .w? "=" .w? term:"res"]
 6 rel = ["(" .w? term:"a" .w? "," .w? term:"b" .w? ")"]
-5 sym = .._seps!:"val"
+5 sym = {.t?:"str_val" .._seps!:"val"}
 4 role_of = {
   ["role_of(" .w? term:"arg" .w? ")" .w? "=" .w? term:"role"]
   [term:"arg" .w? ":" .w? term:"role"]
