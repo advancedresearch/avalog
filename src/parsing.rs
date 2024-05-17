@@ -201,6 +201,14 @@ fn parse_sym_or_var<T: Symbol>(
             } else {
                 val = Some(Expr::Sym(v.into()));
             }
+        } else if let Ok((range, v)) = convert.meta_string("str_val") {
+            convert.update(range);
+            let v = Arc::new(format!("{:?}", v));
+            if T::is_var(&v) {
+                val = Some(Expr::Var(v));
+            } else {
+                val = Some(Expr::Sym(v.into()));
+            }
         } else {
             let range = convert.ignore();
             convert.update(range);
